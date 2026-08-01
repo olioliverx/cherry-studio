@@ -16,3 +16,28 @@
     --settings-width: 210px;
   }
 }
+
+/* ─── ChatWise chat mode ──────────────────────────────────────────────────
+   When the active tab is a chat route, AppShell hides the app icon rail and
+   tab bar, then sets data-shell-variant="chatwise-chat" on its root.  The
+   conversation shell and navigation pane must fill the full window height
+   (no tab-bar offset), and the centered navbar needs macOS traffic-light
+   padding so its controls sit below the window controls.                       */
+[data-shell-variant='chatwise-chat'] [data-ui='chat.view'],
+[data-shell-variant='chatwise-chat'] .conversation-navigation-pane,
+[data-shell-variant='chatwise-chat'] [data-chat-message-only] {
+  height: 100%;
+}
+
+/* Push the centered top bar below the macOS traffic-light zone. */
+[data-shell-variant='chatwise-chat'] [data-chat-topbar-wrapper]::before {
+  content: '';
+  display: block;
+  height: var(--navbar-height);
+  -webkit-app-region: drag;
+}
+
+/* Full-width content — no Cherry Studio 12px right inset. */
+[data-shell-variant='chatwise-chat'] [data-home-content-container] {
+  max-width: 100vw;
+}

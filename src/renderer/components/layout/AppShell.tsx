@@ -16,6 +16,11 @@ import { ResourceViewSourceProvider } from '../ResourceViewSourceProvider'
 import { AppShellTabBar } from './AppShellTabBar'
 import { TabRouter } from './TabRouter'
 
+/** ChatWise-style chat routes get a single-sidebar, no-tab-bar shell. */
+function isChatRoute(url: string | undefined): boolean {
+  return !!url?.startsWith('/app/chat')
+}
+
 export const AppShell = () => {
   const isMacTransparentWindow = useMacTransparentWindow()
   const {
@@ -33,6 +38,7 @@ export const AppShell = () => {
   } = useTabs()
   const activeTab = useMemo(() => tabs.find((tab) => tab.id === activeTabId), [activeTabId, tabs])
   const [isFullscreen, setIsFullscreen] = useState(false)
+  const chatwiseMode = isChatRoute(activeTab?.url)
 
   const handleOpenGlobalSearch = useCallback(() => {
     void GlobalSearchPopup.show()
@@ -145,7 +151,7 @@ export const AppShell = () => {
 
   const contentColumn = (
     <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
-      {tabBar}
+      {!chatwiseMode && tabBar}
       {contentArea}
     </div>
   )
@@ -153,11 +159,12 @@ export const AppShell = () => {
   if (!isMac) {
     return (
       <div
+        data-shell-variant={chatwiseMode ? 'chatwise-chat' : undefined}
         className={cn(
           'flex h-screen w-screen flex-row overflow-hidden text-foreground',
           isMacTransparentWindow ? 'bg-transparent' : 'bg-sidebar'
         )}>
-        <Sidebar />
+        {!chatwiseMode && <Sidebar />}
         {contentColumn}
       </div>
     )
@@ -165,6 +172,7 @@ export const AppShell = () => {
 
   return (
     <div
+      data-shell-variant={chatwiseMode ? 'chatwise-chat' : undefined}
       className={cn(
         'relative flex h-screen w-screen flex-row overflow-hidden text-foreground',
         isMacTransparentWindow ? 'bg-transparent' : 'bg-sidebar'
@@ -176,16 +184,18 @@ export const AppShell = () => {
           className="pointer-events-none absolute top-0 left-0 h-11 w-[env(titlebar-area-x)] [-webkit-app-region:drag]"
         />
       )}
-      <div className="flex h-full min-h-0 shrink-0 flex-col [&>#app-sidebar]:min-h-0 [&>#app-sidebar]:flex-1">
-        {!isFullscreen && (
-          <div
-            aria-hidden="true"
-            data-testid="macos-traffic-light-spacer"
-            className="h-11 shrink-0 [-webkit-app-region:drag]"
-          />
-        )}
-        <Sidebar />
-      </div>
+      {!chatwiseMode && (
+        <div className="flex h-full min-h-0 shrink-0 flex-col [&>#app-sidebar]:min-h-0 [&>#app-sidebar]:flex-1">
+          {!isFullscreen && (
+            <div
+              aria-hidden="true"
+              data-testid="macos-traffic-light-spacer"
+              className="h-11 shrink-0 [-webkit-app-region:drag]"
+            />
+          )}
+          <Sidebar />
+        </div>
+      )}
       {contentColumn}
     </div>
   )

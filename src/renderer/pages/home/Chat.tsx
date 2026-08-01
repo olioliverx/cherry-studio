@@ -49,7 +49,7 @@ type ChatTopBarControlsProps = Omit<ChatConversationControlsProps, 'iconOnly' | 
 function ChatTopBarControls(props: ChatTopBarControlsProps) {
   const { iconOnly } = useConversationTopBarPortalLayout()
 
-  return <ChatConversationControls {...props} side="bottom" iconOnly={iconOnly} />
+  return <ChatConversationControls {...props} side="bottom" iconOnly={iconOnly} hideAssistantSelector />
 }
 
 interface Props {
