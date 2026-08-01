@@ -129,8 +129,8 @@ describe('validateThemeContractSources', () => {
 
   it('requires product variables to be owned by product.css', async () => {
     const sources = await loadSources()
-    sources.product = sources.product.replace('  --chat-user: rgba(0, 0, 0, 0.045);\n', '')
-    sources.primitiveColors += '\n:root {\n  --chat-user: rgba(0, 0, 0, 0.045);\n}\n'
+    sources.product = sources.product.replace('  --chat-user: oklch(0 0 0 / 0.035);\n', '')
+    sources.primitiveColors += '\n:root {\n  --chat-user: oklch(0 0 0 / 0.035);\n}\n'
 
     expect(() => validateThemeContractSources(sources)).toThrow(/product contract in product.css is missing/)
   })
@@ -145,7 +145,7 @@ describe('validateThemeContractSources', () => {
   it('rejects variable cycles in a supported mode', async () => {
     const sources = await loadSources()
     sources.product = sources.product
-      .replace('--inline-code: rgba(0, 0, 0, 0.06);', '--inline-code: var(--inline-code-foreground);')
+      .replace('--inline-code: oklch(0 0 0 / 0.05);', '--inline-code: var(--inline-code-foreground);')
       .replace('--inline-code-foreground: rgb(218, 97, 92);', '--inline-code-foreground: var(--inline-code);')
 
     expect(() => validateThemeContractSources(sources)).toThrow(/light variable cycle/)
@@ -154,7 +154,7 @@ describe('validateThemeContractSources', () => {
   it('rejects unresolved references introduced by a dark override', async () => {
     const sources = await loadSources()
     sources.providerColors = sources.providerColors.replace(
-      '--cs-background: oklch(0.209 0 0 / 0.55);',
+      '--cs-background: oklch(0.16 0 0 / 0.85);',
       '--cs-background: var( --cs-missing-dark-background);'
     )
 
@@ -166,8 +166,8 @@ describe('validateThemeContractSources', () => {
   it('rejects variable cycles introduced by dark overrides', async () => {
     const sources = await loadSources()
     sources.product = sources.product
-      .replace('--code-block: #323232;', '--code-block: var(--inline-code);')
-      .replace('--inline-code: #323232;', '--inline-code: var(--code-block);')
+      .replace('--code-block: oklch(0.22 0 0);', '--code-block: var(--inline-code);')
+      .replace('--inline-code: oklch(0.22 0 0);', '--inline-code: var(--code-block);')
 
     expect(() => validateThemeContractSources(sources)).toThrow(/dark variable cycle/)
   })
