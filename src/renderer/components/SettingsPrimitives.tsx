@@ -12,13 +12,13 @@ export const SettingContainer = ({
 }: React.ComponentPropsWithoutRef<'div'> & { theme?: ThemeMode }) => (
   <div
     data-theme-mode={theme}
-    className={cn('flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto p-4 [&::-webkit-scrollbar]:hidden', className)}
+    className={cn('flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto p-6 [&::-webkit-scrollbar]:hidden', className)}
     {...props}
   />
 )
 
 // Canonical settings page container — mirrors the model service (Provider Settings) detail column:
-// outer p-6 + inner mx-auto max-w-3xl. Use for "simple right-content" settings pages.
+// outer p-8 + inner mx-auto max-w-3xl. Use for "simple right-content" settings pages.
 // Pages with their own internal split layout (Data / Integration / MCP / WebSearch / FileProcessing / Channels)
 // keep SettingContainer instead. See DESIGN.md §4 "Settings Page Content Container".
 export const SettingsContentColumn = ({
@@ -30,21 +30,21 @@ export const SettingsContentColumn = ({
 }: React.ComponentPropsWithoutRef<'div'> & { theme?: ThemeMode; innerClassName?: string }) => (
   <div
     data-theme-mode={theme}
-    className={cn('flex min-h-0 flex-1 flex-col overflow-y-auto p-6 [&::-webkit-scrollbar]:hidden', className)}
+    className={cn('flex min-h-0 flex-1 flex-col overflow-y-auto p-8 [&::-webkit-scrollbar]:hidden', className)}
     {...rest}>
     <div className={cn('mx-auto w-full max-w-3xl', innerClassName)}>{children}</div>
   </div>
 )
 
 // Body variant for pages that handle their own Scrollbar (e.g. ShortcutSettings).
-// Renders the same two-layer structure (outer p-6, inner mx-auto max-w-3xl) without owning the scroll.
+// Renders the same two-layer structure (outer p-8, inner mx-auto max-w-3xl) without owning the scroll.
 export const SettingsContentBody = ({
   className,
   innerClassName,
   children,
   ...rest
 }: React.ComponentPropsWithoutRef<'div'> & { innerClassName?: string }) => (
-  <div className={cn('flex min-h-full w-full flex-col p-6', className)} {...rest}>
+  <div className={cn('flex min-h-full w-full flex-col p-8', className)} {...rest}>
     <div className={cn('mx-auto w-full max-w-3xl', innerClassName)}>{children}</div>
   </div>
 )
@@ -120,7 +120,7 @@ export const SettingGroup = ({
     }}
     className={cn(
       variant === 'card'
-        ? 'mt-4 rounded-xl border border-border bg-card p-4 first:mt-0'
+        ? 'mt-4 rounded-xl border border-border bg-card p-5 first:mt-0'
         : 'mt-2 border-border-subtle border-t pt-3 first:mt-0 first:border-t-0 first:pt-0',
       className
     )}
