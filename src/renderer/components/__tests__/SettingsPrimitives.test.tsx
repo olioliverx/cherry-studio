@@ -13,10 +13,10 @@ describe('settings page containers', () => {
   it.each([
     ['scrolling column', SettingsContentColumn],
     ['scroll body', SettingsContentBody]
-  ])('keeps 24px padding around the %s', (_, Component) => {
+  ])('keeps 32px padding around the %s', (_, Component) => {
     render(<Component data-testid="settings-content">Content</Component>)
 
-    expect(screen.getByTestId('settings-content')).toHaveClass('p-6')
+    expect(screen.getByTestId('settings-content')).toHaveClass('p-8')
     expect(screen.getByTestId('settings-content')).not.toHaveClass('pt-3', 'py-4')
   })
 })
@@ -25,7 +25,7 @@ describe('SettingGroup', () => {
   it('renders settings sections as bordered cards by default', () => {
     render(<SettingGroup data-testid="setting-group">Content</SettingGroup>)
 
-    expect(screen.getByTestId('setting-group')).toHaveClass('rounded-xl', 'border', 'border-border', 'bg-card', 'p-4')
+    expect(screen.getByTestId('setting-group')).toHaveClass('rounded-xl', 'border', 'border-border', 'bg-card', 'p-5')
     expect(screen.getByTestId('setting-group')).toHaveStyle({
       backgroundColor: 'var(--settings-group-background, var(--card))'
     })
@@ -39,7 +39,7 @@ describe('SettingGroup', () => {
     )
 
     expect(screen.getByTestId('setting-group')).toHaveClass('border-t', 'pt-3')
-    expect(screen.getByTestId('setting-group')).not.toHaveClass('rounded-xl', 'bg-card', 'p-4')
+    expect(screen.getByTestId('setting-group')).not.toHaveClass('rounded-xl', 'bg-card', 'p-5')
     expect(screen.getByTestId('setting-group').style.backgroundColor).toBe('')
   })
 })
