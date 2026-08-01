@@ -4,9 +4,9 @@
  */
 
 :root {
-  /* Font Families */
-  --cs-font-family-heading: Inter;
-  --cs-font-family-body: Inter;
+  /* Font Families — native system fonts for ChatWise-style typography */
+  --cs-font-family-heading: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  --cs-font-family-body: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
 
   /* Font Weights (修正单位错误) */
   --cs-font-weight-regular: 400;
