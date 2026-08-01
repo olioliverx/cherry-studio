@@ -176,7 +176,7 @@ describe('ConversationShell', () => {
       'after:bottom-0',
       'after:left-0',
       'after:h-px',
-      'after:bg-border-subtle'
+      'after:bg-border/40'
     )
     expect(topBarWrapper).not.toHaveClass('pr-11', 'pr-[76px]', 'pr-[140px]', 'pr-[172px]')
     expect(topRightTool).toHaveClass('flex', 'shrink-0', 'gap-0.5')

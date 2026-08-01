@@ -71,7 +71,7 @@ export default function ConversationShell({
       data-ui="chat.view"
       className={cn(
         'relative flex flex-1 overflow-hidden bg-background',
-        isWindow ? 'h-full' : 'h-[calc(100vh-var(--navbar-height)-6px)] rounded-tl-[10px] rounded-bl-[10px]',
+        isWindow ? 'h-full' : 'h-[calc(100vh-var(--navbar-height))]',
         className
       )}>
       <QuickPanelProvider>
@@ -114,7 +114,7 @@ const ConversationShellTopBar = ({ topRightTool, showTopRightToolWhenPaneOpen, c
   return (
     <div
       data-conversation-shell-topbar
-      className='relative flex h-fit w-full min-w-0 items-center after:pointer-events-none after:absolute after:right-0 after:bottom-0 after:left-0 after:h-px after:bg-border-subtle after:content-[""]'>
+      className='relative flex h-fit w-full min-w-0 items-center after:pointer-events-none after:absolute after:right-0 after:bottom-0 after:left-0 after:h-px after:bg-border/40 after:content-[""]'>
       <div data-conversation-shell-topbar-content className="min-w-0 flex-1">
         {children}
       </div>
