@@ -36,12 +36,21 @@ const RADIUS_LINES = [
   '--radius-sm: calc(var(--radius) * 0.6);',
   '--radius-md: calc(var(--radius) * 0.8);',
   '--radius-lg: var(--radius);',
-  '--radius-xl: calc(var(--radius) * 1.4);',
-  '--radius-2xl: calc(var(--radius) * 1.8);',
-  '--radius-3xl: calc(var(--radius) * 2.2);',
-  '--radius-4xl: calc(var(--radius) * 2.6);',
+  '--radius-xl: calc(var(--radius) * 1.25);',
+  '--radius-2xl: calc(var(--radius) * 1.5);',
+  '--radius-3xl: calc(var(--radius) * 1.75);',
+  '--radius-4xl: calc(var(--radius) * 2.0);',
   '--radius-full: var(--cs-radius-round);',
   '--radius-round: var(--cs-radius-round);'
+]
+
+/* ChatWise-style shadow overrides — subtler than Tailwind defaults */
+const SHADOW_LINES = [
+  '--shadow-xs: 0 1px 2px 0 rgb(0 0 0 / 0.03);',
+  '--shadow-sm: 0 1px 3px 0 rgb(0 0 0 / 0.04), 0 1px 2px -1px rgb(0 0 0 / 0.04);',
+  '--shadow-md: 0 2px 4px -1px rgb(0 0 0 / 0.05), 0 1px 3px -1px rgb(0 0 0 / 0.04);',
+  '--shadow-lg: 0 4px 8px -2px rgb(0 0 0 / 0.06), 0 2px 4px -2px rgb(0 0 0 / 0.04);',
+  '--shadow-xl: 0 8px 16px -4px rgb(0 0 0 / 0.08), 0 4px 8px -4px rgb(0 0 0 / 0.04);'
 ]
 
 const SPACING_COMMENT_LINES = [
@@ -140,6 +149,7 @@ export function buildThemeContractCss(inputs: ThemeContractInputs): string {
     ),
     buildSection('Spacing', SPACING_COMMENT_LINES),
     buildSection('Radius', RADIUS_LINES),
+    buildSection('Shadows', SHADOW_LINES),
     buildSection('Typography', toDirectMappings(inputs.typographyTokens)),
     buildSection('Animation', ANIMATION_LINES)
   ]
