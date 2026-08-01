@@ -35,9 +35,9 @@
   --error-subtle-foreground: var(--cs-error-subtle-foreground);
   --error-border: var(--cs-error-border);
 
-  /* Stable product domain: rich text and code */
-  --code-block: #e3e3e3;
-  --inline-code: rgba(0, 0, 0, 0.06);
+  /* Stable product domain: rich text and code — ChatWise-style clean code blocks */
+  --code-block: oklch(0.96 0 0);
+  --inline-code: oklch(0 0 0 / 0.05);
   --inline-code-foreground: rgb(218, 97, 92);
 
   /* Stable product domain: references and search highlights */
@@ -48,17 +48,17 @@
   --highlight: var(--cs-amber-50);
   --highlight-accent: var(--cs-amber-100);
 
-  /* Stable product domain: user-message surface */
-  --chat-user: rgba(0, 0, 0, 0.045);
+  /* Stable product domain: user-message surface — subtler, ChatWise-like */
+  --chat-user: oklch(0 0 0 / 0.035);
 }
 
 .dark {
   /* Shared product semantics */
   --link: var(--cs-blue-400);
 
-  /* Stable product domain: rich text and code */
-  --code-block: #323232;
-  --inline-code: #323232;
+  /* Stable product domain: rich text and code — darker for ChatWise-style */
+  --code-block: oklch(0.22 0 0);
+  --inline-code: oklch(0.22 0 0);
 
   /* Stable product domain: references and search highlights */
   --reference: #404040;
@@ -68,6 +68,6 @@
   --highlight: var(--cs-amber-900);
   --highlight-accent: var(--cs-amber-800);
 
-  /* Stable product domain: user-message surface */
-  --chat-user: rgba(255, 255, 255, 0.08);
+  /* Stable product domain: user-message surface — subtler */
+  --chat-user: oklch(1 0 0 / 0.06);
 }

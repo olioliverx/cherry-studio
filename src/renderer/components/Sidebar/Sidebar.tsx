@@ -202,8 +202,8 @@ export function Sidebar({
       ref={sidebarRef}
       style={{ width: actualWidth }}
       className={cn(
-        'sidebar-theme group/sidebar relative z-20 flex h-full shrink-0 select-none flex-col [-webkit-app-region:drag]',
-        isMacTransparentWindow ? 'bg-transparent' : 'bg-sidebar'
+        'sidebar-theme group/sidebar relative z-20 flex h-full shrink-0 select-none flex-col border-r border-sidebar-border [-webkit-app-region:drag]',
+        isMacTransparentWindow ? 'bg-transparent backdrop-blur-xl backdrop-saturate-150' : 'bg-sidebar'
       )}>
       {/* Header */}
       <div
