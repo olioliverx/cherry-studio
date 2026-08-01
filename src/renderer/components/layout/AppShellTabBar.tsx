@@ -499,9 +499,9 @@ export const AppShellTabBar = ({
             closingClass: 'bg-accent text-accent-foreground'
           }
         : {
-            activeClass: 'bg-black/8 text-sidebar-foreground dark:bg-sidebar-accent dark:text-sidebar-foreground',
+            activeClass: 'bg-background text-foreground dark:bg-background dark:text-foreground',
             hoverClass:
-              'text-muted-foreground hover:bg-white hover:text-sidebar-foreground dark:hover:bg-white/10 dark:hover:text-sidebar-foreground data-[menu-open=true]:bg-white data-[menu-open=true]:text-sidebar-foreground dark:data-[menu-open=true]:bg-white/10 dark:data-[menu-open=true]:text-sidebar-foreground',
+              'text-muted-foreground hover:bg-black/4 hover:text-foreground dark:hover:bg-white/5 dark:hover:text-foreground data-[menu-open=true]:bg-black/4 data-[menu-open=true]:text-foreground dark:data-[menu-open=true]:bg-white/5 dark:data-[menu-open=true]:text-foreground',
             closingClass: 'bg-popover text-popover-foreground dark:bg-accent dark:text-accent-foreground'
           },
     [isMacTransparentWindow]
