@@ -121,10 +121,8 @@ export const AppShell = () => {
   )
 
   const contentArea = (
-    <div className="flex min-h-0 min-w-0 flex-1 flex-col pr-2 pb-2">
-      <main
-        data-ui="app.content"
-        className="relative min-h-0 flex-1 overflow-hidden rounded-[12px] border-[0.5px] border-border bg-background">
+    <div className="flex min-h-0 min-w-0 flex-1 flex-col">
+      <main data-ui="app.content" className="relative min-h-0 flex-1 overflow-hidden bg-background">
         {/* Route Tabs: Only render non-dormant tabs */}
         <ResourceViewSourceProvider>
           {tabs

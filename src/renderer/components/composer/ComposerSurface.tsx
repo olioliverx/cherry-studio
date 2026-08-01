@@ -2137,7 +2137,7 @@ export default function ComposerSurface({
       data-composer-inputbar=""
       data-composer-presentation={isCompact ? 'compact' : 'regular'}
       className={cn(
-        'inputbar-container relative rounded-2xl border-[0.5px] border-border bg-card shadow-sm transition-all duration-200 ease-in-out',
+        'inputbar-container relative rounded-2xl border border-border/60 bg-card shadow-[0_1px_3px_oklch(0_0_0/0.06)] transition-all duration-200 ease-in-out',
         isCompact || editingState ? 'pt-0' : 'pt-2',
         belowControls ? 'mb-0.5' : 'mb-3',
         isEditingBorderHighlighted && !isDragging && 'border-primary ring-2 ring-primary/20',

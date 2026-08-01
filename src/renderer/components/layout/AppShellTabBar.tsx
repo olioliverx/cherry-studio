@@ -762,8 +762,8 @@ export const AppShellTabBar = ({
         ref={tabBarRef}
         data-ui="app.tab-bar"
         className={cn(
-          'relative flex h-11 w-full select-none items-center gap-1 [-webkit-app-region:drag]',
-          isMacTransparentWindow ? 'bg-transparent' : 'bg-sidebar',
+          'relative flex h-9 w-full select-none items-center gap-1 [-webkit-app-region:drag]',
+          isMacTransparentWindow ? 'bg-transparent' : 'bg-background',
           rightPaddingClass,
           'pl-0'
         )}>
