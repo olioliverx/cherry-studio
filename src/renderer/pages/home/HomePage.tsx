@@ -946,7 +946,9 @@ type MessageOnlyStatusProps = {
 
 function MessageOnlyStatus({ loading, loadingLabel, missingTitle }: MessageOnlyStatusProps) {
   return (
-    <div className="flex h-[calc(100vh_-_var(--navbar-height))] flex-1 overflow-hidden bg-background">
+    <div
+      data-chat-message-only
+      className="flex h-[calc(100vh_-_var(--navbar-height))] flex-1 overflow-hidden bg-background">
       <ChatAppShell
         centerContent={
           <div className="flex h-full min-h-0 flex-1 items-center justify-center px-6">
@@ -969,6 +971,7 @@ function ContentContainer({
 }: HTMLAttributes<HTMLDivElement> & { $detached?: boolean }) {
   return (
     <div
+      data-home-content-container
       className={cn(
         'flex min-h-0 flex-1 overflow-hidden',
         $detached ? 'max-w-[100vw]' : 'max-w-[calc(100vw_-_12px)]',

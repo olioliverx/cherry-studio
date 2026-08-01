@@ -60,7 +60,7 @@ vi.mock('../../../hooks/tab', () => ({
         isDormant: false,
         title: 'Chat',
         type: 'route',
-        url: '/app/chat'
+        url: '/app/agents'
       }
     ],
     unpinTab: vi.fn(),
