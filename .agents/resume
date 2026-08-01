@@ -1,0 +1,28 @@
+#!/usr/bin/env bash
+# Orb resume for Cherry Studio — runs every time a paused orb wakes.
+# Fast, idempotent repair only. No dependency installs. Must finish within ~10s.
+set -euo pipefail
+
+NODE_SYMLINK="$HOME/.local/node"
+PROFILE="$HOME/.bash_profile"
+PROFILE_MARKER="# cherry-studio orb node toolchain"
+
+# Re-add the PATH export if the profile lost it (e.g. orb restored from a stale snapshot).
+if ! grep -Fqx "$PROFILE_MARKER" "$PROFILE" 2>/dev/null; then
+  cat >> "$PROFILE" <<EOF
+
+$PROFILE_MARKER
+export PATH="$NODE_SYMLINK/bin:$HOME/.local/bin:\$PATH"
+EOF
+  echo "[resume] restored Node toolchain PATH in $PROFILE"
+fi
+
+# Sanity-check the toolchain resolves. Non-fatal: only warn so a missing
+# toolchain surfaces without aborting the wake.
+if [[ -x "$NODE_SYMLINK/bin/node" ]]; then
+  echo "[resume] node $($NODE_SYMLINK/bin/node -v) present"
+else
+  echo "[resume] WARNING: pinned Node not found at $NODE_SYMLINK — run .agents/setup" >&2
+fi
+
+echo "[resume] ok"
