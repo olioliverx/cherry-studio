@@ -194,7 +194,7 @@
   :is(.bubble.messages-container, .bubble .messages-container):not(.multi-select-mode)
     .message-user
     .message-content-container {
-    border-radius: 10px;
+    border-radius: var(--radius-md, 6px);
     padding: 10px 16px 10px 16px;
     background-color: var(--chat-user);
     align-self: self-end;

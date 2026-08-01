@@ -2137,12 +2137,12 @@ export default function ComposerSurface({
       data-composer-inputbar=""
       data-composer-presentation={isCompact ? 'compact' : 'regular'}
       className={cn(
-        'inputbar-container relative rounded-2xl border border-border/60 bg-card shadow-[0_1px_3px_oklch(0_0_0/0.06)] transition-all duration-200 ease-in-out',
+        'inputbar-container relative rounded-xl border border-border/60 bg-card shadow-sm transition-all duration-200 ease-in-out',
         isCompact || editingState ? 'pt-0' : 'pt-2',
         belowControls ? 'mb-0.5' : 'mb-3',
         isEditingBorderHighlighted && !isDragging && 'border-primary ring-2 ring-primary/20',
         isDragging &&
-          "border-2 border-success border-dashed before:pointer-events-none before:absolute before:inset-0 before:z-5 before:rounded-[18px] before:bg-success/[0.03] before:content-['']",
+          "border-2 border-success border-dashed before:pointer-events-none before:absolute before:inset-0 before:z-5 before:rounded-xl before:bg-success/[0.03] before:content-['']",
         isExpanded && 'expanded'
       )}>
       {!isCompact ? (
@@ -2167,7 +2167,7 @@ export default function ComposerSurface({
               <span
                 aria-hidden="true"
                 data-composer-expand-corner-line=""
-                className="pointer-events-none absolute top-1 right-1 size-3 origin-top-right scale-100 rounded-tr-[16px] border-foreground/60 border-t-[1.5px] border-r-[1.5px] opacity-70 transition-[opacity,scale] duration-200 ease-out group-focus-within/expand-corner:scale-50 group-focus-within/expand-corner:opacity-0 group-hover/expand-corner:scale-50 group-hover/expand-corner:opacity-0"
+                className="pointer-events-none absolute top-1 right-1 size-3 origin-top-right scale-100 rounded-tr-xl border-foreground/60 border-t-[1.5px] border-r-[1.5px] opacity-70 transition-[opacity,scale] duration-200 ease-out group-focus-within/expand-corner:scale-50 group-focus-within/expand-corner:opacity-0 group-hover/expand-corner:scale-50 group-hover/expand-corner:opacity-0"
               />
               <Button
                 type="button"
@@ -2255,7 +2255,7 @@ export default function ComposerSurface({
           onDragOver={handleDragOver}
           onDrop={handleDrop}>
           {belowControls ? (
-            <div className="mb-6 rounded-2xl bg-muted/45 pb-1.5 dark:bg-muted/25">
+            <div className="mb-6 rounded-xl bg-muted/45 pb-1.5 dark:bg-muted/25">
               {queueContent}
               {inputbarStack}
               <div className="min-w-0 overflow-hidden px-2 pt-0.5">{belowControls}</div>
