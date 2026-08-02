@@ -14,8 +14,14 @@ export function ConversationNavigationPane({ children, className, ...props }: HT
         className
       )}
       {...props}>
-      {/* ChatWise mode: macOS traffic-light drag spacer at the top of the sidebar */}
-      {isMac && <div aria-hidden="true" className="h-11 shrink-0 [-webkit-app-region:drag]" />}
+      {/* Residual top reserve: 44px detached/mac local, 0 when AppShell owns content-top inset */}
+      {isMac && (
+        <div
+          aria-hidden="true"
+          data-shell-local-top-reserve="titlebar"
+          className="h-(--shell-local-top-inset) shrink-0 [-webkit-app-region:drag]"
+        />
+      )}
       <div className="conversation-navigation-pane-content flex flex-1 flex-col overflow-hidden transition-[width] duration-300">
         {children}
       </div>

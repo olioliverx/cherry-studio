@@ -119,4 +119,35 @@ describe('MiniAppTabsPool', () => {
     expect(renderedAppIds(container)).toEqual(['alpha', 'bravo'])
     expect(renderedAppUrls(container)).toEqual(['https://renamed-alpha.example.com', 'https://bravo.example.com'])
   })
+
+  it('offsets visible pool geometry by --shell-content-top-inset plus the 35px toolbar', () => {
+    mocks.openedKeepAliveMiniApps = [stubApp('alpha')]
+    mocks.currentMiniAppId = 'alpha'
+    mocks.tabs = [{ id: 't1', url: '/app/mini-app/alpha' }]
+    mocks.activeTabId = 't1'
+
+    const { container } = render(<MiniAppTabsPool />)
+    const pool = container.querySelector('[data-mini-app-tabs-pool]') as HTMLElement
+
+    expect(pool).toBeTruthy()
+    expect(pool).toHaveAttribute('data-shell-content-top-offset', 'var(--shell-content-top-inset)')
+    expect(pool.style.top).toBe('calc(var(--shell-content-top-inset) + 35px)')
+    expect(pool.style.height).toBe('calc(100% - var(--shell-content-top-inset) - 35px)')
+    // Default token is 0px on :root — non-mac / subwindow hosts keep prior 35px clearance.
+  })
+
+  it('keeps hidden pool geometry unset so keep-alive does not paint into the titlebar', () => {
+    mocks.openedKeepAliveMiniApps = [stubApp('alpha')]
+    mocks.currentMiniAppId = 'alpha'
+    // No active mini-app route URL → pool stays hidden
+    mocks.tabs = [{ id: 't1', url: '/app/chat' }]
+    mocks.activeTabId = 't1'
+
+    const { container } = render(<MiniAppTabsPool />)
+    const pool = container.querySelector('[data-mini-app-tabs-pool]') as HTMLElement
+
+    expect(pool.style.visibility).toBe('hidden')
+    expect(pool.style.top).toBe('')
+    expect(pool.getAttribute('aria-hidden')).toBe('true')
+  })
 })

@@ -105,8 +105,14 @@ const MiniAppTabsPool: React.FC = () => {
     }
   }, [apps])
 
-  // Hide directly when not shown to avoid flicker; keep DOM for keep-alive
-  const toolbarHeight = 35 // Match MinimalToolbar height
+  // Hide directly when not shown to avoid flicker; keep DOM for keep-alive.
+  // MinimalToolbar is 35px. Pool is absolutely positioned inside AppShell main
+  // (which already pads with --shell-content-top-inset). Offset from the main
+  // border-box so the webview clears both the titlebar inset and the toolbar.
+  // --shell-content-top-inset defaults to 0px on :root for non-mac / subwindows.
+  const toolbarHeightPx = 35
+  const poolTop = `calc(var(--shell-content-top-inset) + ${toolbarHeightPx}px)`
+  const poolHeight = `calc(100% - var(--shell-content-top-inset) - ${toolbarHeightPx}px)`
 
   return (
     <div
@@ -115,12 +121,13 @@ const MiniAppTabsPool: React.FC = () => {
         shouldShow
           ? {
               visibility: 'visible',
-              top: toolbarHeight,
-              height: `calc(100% - ${toolbarHeight}px)`
+              top: poolTop,
+              height: poolHeight
             }
           : { visibility: 'hidden' }
       }
       data-mini-app-tabs-pool
+      data-shell-content-top-offset="var(--shell-content-top-inset)"
       aria-hidden={!shouldShow}>
       {apps.map((app) => (
         <div
