@@ -294,7 +294,7 @@ const HeaderNavbar = ({
   }, [activeNode, notesTree])
 
   return (
-    <NavbarHeader className="home-navbar shrink-0 justify-start [border-bottom:1px_solid_var(--border)]">
+    <NavbarHeader className="home-navbar shrink-0 justify-start bg-background [border-bottom:1px_solid_var(--border-subtle)]">
       <RowFlex className="flex-[0_0_auto] items-center">
         {showWorkspace && (
           <Tooltip title={t('navbar.hide_sidebar')} delay={800}>

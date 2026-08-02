@@ -90,7 +90,7 @@ const MessageHeader: FC<Props> = memo(
 
     return (
       <div
-        className={`message-header group/header relative flex gap-2.5 ${hasBodySlot ? 'mb-0 items-start' : 'mb-2 items-center'}`}>
+        className={`message-header group/header relative flex gap-2 ${hasBodySlot ? 'mb-0 items-start' : 'mb-1.5 items-center'}`}>
         {isAssistantMessage ? (
           authorAvatar ? (
             <MessageAvatar avatar={authorAvatar} fallback={avatarName} />
@@ -114,7 +114,7 @@ const MessageHeader: FC<Props> = memo(
           className={hasBodySlot ? 'message-body-column flex min-h-0 min-w-0 flex-1 flex-col' : 'flex min-w-0 flex-1'}>
           <div className="flex w-full min-w-0 items-center gap-1.5">
             <span
-              className="truncate font-semibold text-sm leading-5"
+              className="truncate font-medium text-[13px] leading-5"
               style={{
                 color: isBubbleStyle && theme === 'dark' ? 'white' : 'var(--foreground)'
               }}>
@@ -123,7 +123,7 @@ const MessageHeader: FC<Props> = memo(
             {isAssistantMessage && showModelIdentity && displayModelName && (
               <span className="flex min-w-0 shrink items-center gap-1 text-foreground-tertiary text-xs leading-5">
                 <span aria-hidden="true" className="shrink-0">
-                  <ModelAvatar className="rounded-full" model={displayModel} size={16} />
+                  <ModelAvatar className="rounded-full" model={displayModel} size={14} />
                 </span>
                 <span className="truncate">{displayModelName}</span>
               </span>
@@ -154,7 +154,7 @@ const MessageHeader: FC<Props> = memo(
             )}
           </div>
           {contentSlot && (
-            <div className="message-body-content mt-2 min-h-0 min-w-0 max-w-full flex-1">{contentSlot}</div>
+            <div className="message-body-content mt-1.5 min-h-0 min-w-0 max-w-full flex-1">{contentSlot}</div>
           )}
           {footerSlot && <div className="message-footer-slot mt-auto min-w-0 shrink-0">{footerSlot}</div>}
         </div>

@@ -3,8 +3,9 @@ import '@testing-library/jest-dom/vitest'
 
 import type { SidebarAppId } from '@renderer/utils/sidebar'
 import type { SidebarFavoriteItem } from '@shared/data/preference/preferenceTypes'
-import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
-import type { ReactNode } from 'react'
+import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
+import type { ReactNode, Ref } from 'react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import type * as SidebarConstants from '../../Sidebar/constants'
@@ -167,6 +168,8 @@ vi.mock('../../Sidebar', async () => {
     Sidebar: ({
       isFloating,
       isFloatingClosing,
+      floatingPanelRef,
+      onEntryOpen,
       onDismiss,
       onHoverChange,
       onEntriesReorder,
@@ -189,6 +192,8 @@ vi.mock('../../Sidebar', async () => {
       actions?: ReactNode | ((layout: 'icon' | 'full') => ReactNode)
       width?: number
       onResizePreview?: (width: number | null) => void
+      floatingPanelRef?: Ref<HTMLDivElement>
+      onEntryOpen?: () => void
       onDismiss?: () => void
       onHoverChange?: (hovering: boolean) => void
       onEntriesReorder?: (event: { oldIndex: number; newIndex: number }) => void
@@ -201,8 +206,18 @@ vi.mock('../../Sidebar', async () => {
       const dockedTabs = entries?.filter((entry) => parseEntryKey(entry.key).type === 'mini_app')
       return isFloating ? (
         <div
+          ref={floatingPanelRef}
+          tabIndex={-1}
+          onKeyDown={(event) => {
+            if (event.key === 'Escape') onDismiss?.()
+          }}
           className={isFloatingClosing ? 'slide-out-to-left-2 animate-out' : 'slide-in-from-left-2 animate-in'}
           data-testid="floating-sidebar">
+          <div data-ui="sidebar.navigation">
+            <button type="button" onClick={onEntryOpen}>
+              Chat
+            </button>
+          </div>
           <button type="button" onClick={onDismiss}>
             dismiss
           </button>
@@ -349,6 +364,26 @@ describe('app Sidebar', () => {
     fireEvent.click(screen.getByTestId('sidebar-shell-actions-icon'))
 
     expect(mocks.openSettingsTab).toHaveBeenCalledWith('/settings/provider')
+  })
+
+  it('opens keyboard-accessible global navigation and restores focus when it closes', async () => {
+    const user = userEvent.setup()
+    mocks.sidebarWidth = 0
+
+    render(<Sidebar />)
+
+    const launcher = screen.getByRole('button', { name: 'common.open_sidebar' })
+    launcher.focus()
+    await user.keyboard('{Enter}')
+
+    const floatingSidebar = screen.getByTestId('floating-sidebar')
+    expect(floatingSidebar).toBeInTheDocument()
+    await waitFor(() => expect(within(floatingSidebar).getByRole('button', { name: 'Chat' })).toHaveFocus())
+
+    await user.keyboard('{Escape}')
+
+    expect(screen.queryByTestId('floating-sidebar')).not.toBeInTheDocument()
+    await waitFor(() => expect(screen.getByRole('button', { name: 'common.open_sidebar' })).toHaveFocus())
   })
 
   it('derives conversation detach URLs from instance metadata', () => {

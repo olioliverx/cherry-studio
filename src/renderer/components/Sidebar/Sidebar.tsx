@@ -4,7 +4,7 @@ import useMacTransparentWindow from '@renderer/hooks/useMacTransparentWindow'
 import { isMac } from '@renderer/utils/platform'
 import { cn } from '@renderer/utils/style'
 import { Search } from 'lucide-react'
-import React, { useCallback, useEffect, useRef } from 'react'
+import React, { type Ref, useCallback, useEffect, useRef } from 'react'
 
 import { getSidebarDisplayWidth, getSidebarLayout } from './constants'
 import { DefaultLogo } from './primitives'
@@ -31,7 +31,9 @@ export interface SidebarProps {
   onSearchClick?: () => void
   onExtensionsClick?: () => void
   onEntriesReorder?: (event: { oldIndex: number; newIndex: number }) => void
+  onEntryOpen?: () => void
   onDismiss?: () => void
+  floatingPanelRef?: Ref<HTMLDivElement>
 }
 
 export function Sidebar({
@@ -51,7 +53,9 @@ export function Sidebar({
   onSearchClick,
   onExtensionsClick,
   onEntriesReorder,
-  onDismiss
+  onEntryOpen,
+  onDismiss,
+  floatingPanelRef
 }: SidebarProps) {
   const isMacTransparentWindow = useMacTransparentWindow()
   const { sidebarRef, startResizing } = useSidebarResize(width, setWidth, onResizePreview)
@@ -111,7 +115,8 @@ export function Sidebar({
     entries,
     active,
     onReorder: onEntriesReorder,
-    onContextMenuOpenChange: handleContextMenuOpenChange
+    onContextMenuOpenChange: handleContextMenuOpenChange,
+    onEntryOpen
   }
   const footerProps = { user, actions, extensionsLabel, onExtensionsClick }
 
@@ -120,14 +125,27 @@ export function Sidebar({
     return (
       <div className="fixed inset-0 z-40" onClick={handleDismiss}>
         <div
+          ref={floatingPanelRef}
+          tabIndex={-1}
           className={cn(
             'sidebar-theme slide-in-from-left-2 fixed top-0 bottom-0 left-0 flex w-43.5 animate-in select-none flex-col rounded-r-sm rounded-br-2xl bg-sidebar shadow-2xl backdrop-blur-2xl backdrop-saturate-150 duration-200 [-webkit-app-region:drag]',
             isMac && 'pt-[env(titlebar-area-height)]'
           )}
+          onKeyDown={(event) => {
+            if (event.key === 'Escape') {
+              event.preventDefault()
+              handleDismiss()
+            }
+          }}
           onClick={(event) => event.stopPropagation()}
-          onMouseLeave={() => {
+          onBlur={(event) => {
+            if (!event.currentTarget.contains(event.relatedTarget) && !contextMenuOpenRef.current) {
+              scheduleHoverDismiss()
+            }
+          }}
+          onMouseLeave={(event) => {
             floatingPointerInsideRef.current = false
-            if (!contextMenuOpenRef.current) {
+            if (!contextMenuOpenRef.current && !event.currentTarget.contains(document.activeElement)) {
               scheduleHoverDismiss()
             }
           }}
@@ -154,7 +172,7 @@ export function Sidebar({
             </div>
           )}
 
-          <div className="flex-1 overflow-y-auto py-1 [&::-webkit-scrollbar]:hidden">
+          <div data-ui="sidebar.navigation" className="flex-1 overflow-y-auto py-1 [&::-webkit-scrollbar]:hidden">
             <SidebarList layout="full" {...listProps} />
           </div>
 
@@ -237,7 +255,7 @@ export function Sidebar({
         ))}
 
       {/* Content */}
-      <div className="flex-1 overflow-y-auto py-1 [&::-webkit-scrollbar]:hidden">
+      <div data-ui="sidebar.navigation" className="flex-1 overflow-y-auto py-1 [&::-webkit-scrollbar]:hidden">
         <SidebarList layout={layout} {...listProps} />
       </div>
 

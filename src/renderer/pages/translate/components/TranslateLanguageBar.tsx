@@ -146,7 +146,7 @@ const TranslateLanguageBar: FC<Props> = ({
   const targetSelectWidth = useMemo(() => getLanguageSelectWidth(targetOptions), [targetOptions])
 
   return (
-    <div className={cn('flex shrink-0 items-center gap-3 px-4 py-4 lg:px-6', className)}>
+    <div className={cn('flex shrink-0 items-center gap-2.5 px-4 py-3 lg:px-6', className)}>
       {!isBidirectional && (
         <>
           <Combobox
@@ -178,7 +178,7 @@ const TranslateLanguageBar: FC<Props> = ({
               onClick={onExchange}
               disabled={!couldExchange}
               aria-label={t('translate.exchange.label')}
-              className="h-8 w-8 shrink-0 rounded-full text-muted-foreground shadow-none transition-all hover:bg-accent hover:text-foreground active:scale-90">
+              className="h-8 w-8 shrink-0 rounded-md text-muted-foreground shadow-none transition-all hover:bg-accent hover:text-foreground active:scale-90">
               <ArrowLeftRight size={14} />
             </Button>
           </Tooltip>

@@ -55,7 +55,7 @@ const NotesSidebarHeader: FC<NotesSidebarHeaderProps> = ({
 
   return (
     <div
-      className={`flex h-(--navbar-height) border-border border-b px-3 py-2 ${
+      className={`flex h-(--navbar-height) border-border-subtle border-b px-3 py-2 ${
         isShowStarred || isShowSearch ? 'justify-start' : 'justify-center'
       }`}>
       <div className="flex items-center gap-1">
@@ -63,7 +63,7 @@ const NotesSidebarHeader: FC<NotesSidebarHeaderProps> = ({
           <>
             <Tooltip content={t('notes.new_note')} delay={800}>
               <div
-                className="flex size-6 cursor-pointer items-center justify-center rounded-sm text-muted-foreground hover:bg-muted hover:text-foreground"
+                className="flex size-6 cursor-pointer items-center justify-center rounded-md text-muted-foreground hover:bg-sidebar-accent hover:text-foreground"
                 onClick={onCreateNote}>
                 <FilePlus2 size={18} />
               </div>
@@ -71,7 +71,7 @@ const NotesSidebarHeader: FC<NotesSidebarHeaderProps> = ({
 
             <Tooltip content={t('notes.new_folder')} delay={800}>
               <div
-                className="flex size-6 cursor-pointer items-center justify-center rounded-sm text-muted-foreground hover:bg-muted hover:text-foreground"
+                className="flex size-6 cursor-pointer items-center justify-center rounded-md text-muted-foreground hover:bg-sidebar-accent hover:text-foreground"
                 onClick={onCreateFolder}>
                 <FolderPlus size={18} />
               </div>
@@ -81,7 +81,7 @@ const NotesSidebarHeader: FC<NotesSidebarHeaderProps> = ({
               <PopoverTrigger asChild>
                 <div>
                   <Tooltip content={t('assistants.presets.sorting.title')} delay={800}>
-                    <div className="flex size-6 cursor-pointer items-center justify-center rounded-sm text-muted-foreground hover:bg-muted hover:text-foreground">
+                    <div className="flex size-6 cursor-pointer items-center justify-center rounded-md text-muted-foreground hover:bg-sidebar-accent hover:text-foreground">
                       <ArrowUpNarrowWide size={18} />
                     </div>
                   </Tooltip>
@@ -111,7 +111,7 @@ const NotesSidebarHeader: FC<NotesSidebarHeaderProps> = ({
 
             <Tooltip content={t('notes.show_starred')} delay={800}>
               <div
-                className="flex size-6 cursor-pointer items-center justify-center rounded-sm text-muted-foreground hover:bg-muted hover:text-foreground"
+                className="flex size-6 cursor-pointer items-center justify-center rounded-md text-muted-foreground hover:bg-sidebar-accent hover:text-foreground"
                 onClick={onToggleStarredView}>
                 <Star size={18} />
               </div>
@@ -119,7 +119,7 @@ const NotesSidebarHeader: FC<NotesSidebarHeaderProps> = ({
 
             <Tooltip content={t('common.search')} delay={800}>
               <div
-                className="flex size-6 cursor-pointer items-center justify-center rounded-sm text-muted-foreground hover:bg-muted hover:text-foreground"
+                className="flex size-6 cursor-pointer items-center justify-center rounded-md text-muted-foreground hover:bg-sidebar-accent hover:text-foreground"
                 onClick={onToggleSearchView}>
                 <Search size={18} />
               </div>
@@ -129,7 +129,7 @@ const NotesSidebarHeader: FC<NotesSidebarHeaderProps> = ({
         {isShowStarred && (
           <Tooltip content={t('common.back')} delay={800}>
             <div
-              className="flex size-6 cursor-pointer items-center justify-center rounded-sm text-muted-foreground hover:bg-muted hover:text-foreground"
+              className="flex size-6 cursor-pointer items-center justify-center rounded-md text-muted-foreground hover:bg-sidebar-accent hover:text-foreground"
               onClick={onToggleStarredView}>
               <ArrowLeft size={18} />
             </div>
@@ -139,7 +139,7 @@ const NotesSidebarHeader: FC<NotesSidebarHeaderProps> = ({
           <>
             <Tooltip content={t('common.back')} delay={800}>
               <div
-                className="flex size-6 cursor-pointer items-center justify-center rounded-sm text-muted-foreground hover:bg-muted hover:text-foreground"
+                className="flex size-6 cursor-pointer items-center justify-center rounded-md text-muted-foreground hover:bg-sidebar-accent hover:text-foreground"
                 onClick={onToggleSearchView}>
                 <ArrowLeft size={18} />
               </div>

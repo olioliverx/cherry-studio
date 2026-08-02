@@ -375,6 +375,44 @@ describe('Sidebar resize handle', () => {
     }
   })
 
+  it('dismisses floating navigation with Escape', () => {
+    const onDismiss = vi.fn()
+    const { container } = render(
+      <Sidebar
+        width={SIDEBAR_HIDDEN_THRESHOLD - 10}
+        setWidth={vi.fn()}
+        active={{ activeItem: 'chat' }}
+        entries={entries}
+        isFloating
+        onDismiss={onDismiss}
+      />
+    )
+
+    const panel = container.querySelector('.slide-in-from-left-2') as HTMLElement
+    panel.focus()
+    fireEvent.keyDown(panel, { key: 'Escape' })
+
+    expect(onDismiss).toHaveBeenCalledTimes(1)
+  })
+
+  it('dismisses floating navigation after opening an entry', () => {
+    const onEntryOpen = vi.fn()
+    render(
+      <Sidebar
+        width={SIDEBAR_HIDDEN_THRESHOLD - 10}
+        setWidth={vi.fn()}
+        active={{ activeItem: 'chat' }}
+        entries={entries}
+        isFloating
+        onEntryOpen={onEntryOpen}
+      />
+    )
+
+    fireEvent.click(screen.getByRole('button', { name: 'Chat' }))
+
+    expect(onEntryOpen).toHaveBeenCalledTimes(1)
+  })
+
   it('renders apps and direct mini app icons together in one full docked list', () => {
     const { container } = render(
       <Sidebar

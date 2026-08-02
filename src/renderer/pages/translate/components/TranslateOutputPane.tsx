@@ -35,7 +35,7 @@ const TranslateOutputPane = ({
       <Scrollbar
         ref={ref}
         onScroll={onScroll}
-        className="selectable min-h-0 flex-1 overflow-x-hidden p-4 pr-12 text-base leading-relaxed">
+        className="selectable min-h-0 flex-1 overflow-x-hidden p-5 pr-12 text-base leading-relaxed">
         <div className="flex min-h-full flex-col">
           {translating && !translatedContent ? (
             <div className="flex items-center gap-2 text-muted-foreground">

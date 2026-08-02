@@ -1,3 +1,4 @@
+import { Button, Tooltip } from '@cherrystudio/ui'
 import { usePersistCache } from '@data/hooks/useCache'
 import { usePreference } from '@data/hooks/usePreference'
 import { arrayMove } from '@dnd-kit/sortable'
@@ -15,8 +16,9 @@ import {
   resolveSidebarActiveItem
 } from '@renderer/utils/sidebar'
 import { clearTabInstanceMetadata } from '@renderer/utils/tabInstanceMetadata'
+import { PanelLeft } from 'lucide-react'
 import type { Ref } from 'react'
-import { useCallback, useEffect, useLayoutEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { SidebarShellActions } from '../layout/ShellTabBarActions'
@@ -100,7 +102,37 @@ export default function Sidebar({ ref }: { ref?: Ref<HTMLDivElement | null> }) {
 
   // Floating sidebar (hover reveal when hidden)
   const [hoverVisible, setHoverVisible] = useState(false)
+  const [openedFromLauncher, setOpenedFromLauncher] = useState(false)
+  const launcherRef = useRef<HTMLButtonElement>(null)
+  const floatingPanelRef = useRef<HTMLDivElement>(null)
+  const restoreLauncherFocusRef = useRef(false)
   const layout = getSidebarLayout(activeSidebarWidth)
+
+  const handleLauncherOpen = useCallback(() => {
+    setOpenedFromLauncher(true)
+    setHoverVisible(true)
+  }, [])
+
+  const handleFloatingDismiss = useCallback(() => {
+    restoreLauncherFocusRef.current = openedFromLauncher
+    setOpenedFromLauncher(false)
+    setHoverVisible(false)
+  }, [openedFromLauncher])
+
+  useEffect(() => {
+    if (hoverVisible && openedFromLauncher) {
+      const firstNavigationItem = floatingPanelRef.current?.querySelector<HTMLElement>(
+        '[data-ui="sidebar.navigation"] button:not([disabled])'
+      )
+      ;(firstNavigationItem ?? floatingPanelRef.current)?.focus()
+      return
+    }
+
+    if (!hoverVisible && restoreLauncherFocusRef.current) {
+      restoreLauncherFocusRef.current = false
+      launcherRef.current?.focus()
+    }
+  }, [hoverVisible, openedFromLauncher])
 
   // Menu items
   const pathname = activeTab?.url || '/'
@@ -257,16 +289,39 @@ export default function Sidebar({ ref }: { ref?: Ref<HTMLDivElement | null> }) {
       <UISidebar
         width={activeSidebarWidth}
         setWidth={setSidebarWidth}
-        onHoverChange={setHoverVisible}
+        onHoverChange={(visible) => {
+          setHoverVisible(visible)
+          if (!visible) setOpenedFromLauncher(false)
+        }}
         onResizePreview={setPreviewSidebarWidth}
         {...sidebarProps}
       />
+      {!hoverVisible && layout === 'hidden' && (
+        <Tooltip
+          content={t('common.open_sidebar')}
+          placement="right"
+          delay={400}
+          classNames={{ placeholder: 'absolute bottom-3 left-3 z-60' }}>
+          <Button
+            ref={launcherRef}
+            type="button"
+            variant="ghost"
+            size="icon"
+            aria-label={t('common.open_sidebar')}
+            onClick={handleLauncherOpen}
+            className="size-8 rounded-lg border border-border/60 bg-background/80 text-muted-foreground shadow-sm backdrop-blur-md [-webkit-app-region:no-drag] hover:bg-accent hover:text-foreground">
+            <PanelLeft size={16} strokeWidth={1.7} />
+          </Button>
+        </Tooltip>
+      )}
       {hoverVisible && layout === 'hidden' && (
         <UISidebar
           width={activeSidebarWidth}
           setWidth={setSidebarWidth}
           isFloating
-          onDismiss={() => setHoverVisible(false)}
+          floatingPanelRef={floatingPanelRef}
+          onEntryOpen={handleFloatingDismiss}
+          onDismiss={handleFloatingDismiss}
           {...sidebarProps}
         />
       )}

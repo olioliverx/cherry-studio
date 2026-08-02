@@ -57,12 +57,12 @@ export const CodeCliSidebar: FC<CodeCliSidebarProps> = ({
   const { t } = useTranslation()
 
   return (
-    <div className="flex h-full min-h-0 w-60 shrink-0 flex-col border-border-subtle border-r">
-      <Scrollbar className="min-h-0 flex-1 overflow-x-hidden p-2.5">
+    <div className="flex h-full min-h-0 w-60 shrink-0 flex-col border-border-subtle border-r bg-sidebar">
+      <Scrollbar className="min-h-0 flex-1 overflow-x-hidden px-2 py-3">
         {tools.length === 0 ? (
           <div className="py-8 text-center text-foreground-tertiary text-xs">{t('code.no_tools')}</div>
         ) : (
-          <div className="space-y-2">
+          <div className="space-y-1">
             {tools.map((tool) => {
               const meta = toMeta(tool)
               const isSelected = selectedCliTool === tool.value
@@ -72,8 +72,8 @@ export const CodeCliSidebar: FC<CodeCliSidebarProps> = ({
                   key={tool.value}
                   type="button"
                   onClick={() => onSelectTool(tool.value)}
-                  className={`flex w-full items-center gap-2.5 rounded-lg px-2 py-1.5 text-left transition-colors ${
-                    isSelected ? 'bg-accent/55' : 'hover:bg-accent/30'
+                  className={`flex w-full items-center gap-2.5 rounded-md px-2.5 py-2 text-left transition-colors ${
+                    isSelected ? 'bg-sidebar-accent text-sidebar-accent-foreground' : 'hover:bg-sidebar-accent'
                   }`}>
                   <CliIcon id={tool.value} size={28} className="size-7 shrink-0" />
                   <div className="min-w-0 flex-1">
