@@ -61,9 +61,10 @@ describe('PaintingStrip', () => {
   })
 
   it('keeps the 68px strip and New Image action while applying launcher bottom inset only on the scroll strip', () => {
+    // Populated-strip contract: page only mounts this component when history has items.
     const { container } = render(
       <PaintingStrip
-        items={[]}
+        items={[painting]}
         hasMore={false}
         loadMore={vi.fn()}
         onDeletePainting={vi.fn()}
@@ -72,8 +73,12 @@ describe('PaintingStrip', () => {
       />
     )
 
-    const strip = container.querySelector('.w-\\[68px\\]') ?? container.firstElementChild
+    const strip =
+      container.querySelector('[data-ui="paintings.painting-strip"]') ??
+      container.querySelector('.w-\\[68px\\]') ??
+      container.firstElementChild
     expect(strip).toBeTruthy()
+    expect(strip).toHaveAttribute('data-ui', 'paintings.painting-strip')
     expect(strip?.className).toContain('w-[68px]')
     expect(strip?.className).toContain('--shell-launcher-bottom-inset')
     // No local titlebar pad — AppShell owns content-top inset.
