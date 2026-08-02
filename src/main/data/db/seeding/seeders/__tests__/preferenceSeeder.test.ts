@@ -67,13 +67,13 @@ describe('PreferenceSeeder', () => {
     expect(after).toBe(before)
   })
 
-  it('keeps clear context unpinned in the default chat toolbar', async () => {
+  it('keeps only attachment pinned in the default chat toolbar', async () => {
     new PreferenceSeeder().run(dbh.db)
 
     const [toolbar] = await dbh.db
       .select()
       .from(preferenceTable)
       .where(and(eq(preferenceTable.scope, 'default'), eq(preferenceTable.key, toolbarKey)))
-    expect(toolbar.value).toEqual(['composer:new-conversation', 'web-search'])
+    expect(toolbar.value).toEqual(['attachment'])
   })
 })
