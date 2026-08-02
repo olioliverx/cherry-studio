@@ -1,6 +1,7 @@
 import { cacheService } from '@data/CacheService'
 import { MessageEditingProvider, useMessageEditing } from '@renderer/components/chat/editing/MessageEditingContext'
 import { toast } from '@renderer/services/toast'
+import { getDefaultValue } from '@shared/data/preference/preferenceUtils'
 import type { KnowledgeBase } from '@shared/data/types/knowledge'
 import { type Model, MODEL_CAPABILITY } from '@shared/data/types/model'
 import { IpcChannel } from '@shared/IpcChannel'
@@ -1024,6 +1025,41 @@ describe('ChatComposer', () => {
         inputAdapter: expect.objectContaining({ focus: mocks.inputAdapterFocus })
       })
     )
+  })
+
+  it('defaults the resting chat toolbar to attachment while disclosing secondary actions', () => {
+    mocks.pinnedToolIds = [...getDefaultValue('chat.input.toolbar.pinned_tools')]
+    mocks.toolLaunchers = [
+      {
+        id: 'attachment',
+        kind: 'dialog',
+        label: 'chat.input.upload.attachment',
+        icon: <span data-testid="attachment-icon" />,
+        sources: ['popover'],
+        active: false
+      },
+      {
+        id: 'web-search',
+        kind: 'command',
+        label: 'chat.input.web_search.label',
+        icon: <span data-testid="web-search-icon" />,
+        sources: ['popover'],
+        active: false
+      }
+    ]
+    mocks.toolLaunchersVersion = 1
+
+    render(<ChatComposer topic={topic} onSend={vi.fn()} onCreateEmptyTopic={vi.fn()} />)
+
+    const leftControls = screen.getByTestId('composer-left-controls')
+    const attachmentButton = within(leftControls).getByRole('button', { name: 'chat.input.upload.attachment' })
+    const toolMenuButton = within(leftControls).getByRole('button', { name: 'tool menu' })
+
+    expect(attachmentButton).toHaveAttribute('aria-haspopup', 'dialog')
+    expect(attachmentButton.compareDocumentPosition(toolMenuButton)).toBe(Node.DOCUMENT_POSITION_FOLLOWING)
+    expect(within(leftControls).queryByRole('button', { name: 'chat.conversation.new' })).not.toBeInTheDocument()
+    expect(within(leftControls).queryByRole('button', { name: 'chat.input.web_search.label' })).not.toBeInTheDocument()
+    expect(mocks.surfaceProps?.rootPanelLeadingItems?.map((item) => item.id)).toEqual(['composer:new-conversation'])
   })
 
   it('exposes MCP as a customizable chat toolbar shortcut', () => {
