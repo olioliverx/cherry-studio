@@ -1,8 +1,13 @@
+import { readFileSync } from 'node:fs'
+import { join } from 'node:path'
+
 import { fireEvent, render, screen } from '@testing-library/react'
 import type { ReactNode } from 'react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import SettingsPage from '../SettingsPage'
+
+const responsiveStyles = readFileSync(join(process.cwd(), 'src/renderer/assets/styles/responsive.css'), 'utf8')
 
 const { isMacTransparentWindowMock, navigateMock } = vi.hoisted(() => ({
   isMacTransparentWindowMock: vi.fn(),
@@ -23,12 +28,18 @@ vi.mock('@cherrystudio/ui', () => ({
     </div>
   ),
   PageHeader: ({ className, title }: { className?: string; title: string }) => (
-    <header className={className}>{title}</header>
+    <div data-slot="page-header" className={className}>
+      <h2>{title}</h2>
+    </div>
   )
 }))
 
 vi.mock('@renderer/components/Scrollbar', () => ({
-  default: ({ children }: { children: ReactNode }) => <div>{children}</div>
+  default: ({ children, className }: { children: ReactNode; className?: string }) => (
+    <div data-testid="settings-navigation-scroll" className={className}>
+      {children}
+    </div>
+  )
 }))
 
 vi.mock('@renderer/hooks/useMacTransparentWindow', () => ({
@@ -76,9 +87,9 @@ describe('SettingsPage', () => {
   it('places local models directly below the default model', () => {
     const { container } = render(<SettingsPage />)
 
-    expect(container.querySelector('[data-ui="settings.view"]')).toBeInTheDocument()
-    expect(container.querySelector('[data-ui="settings.navigation"]')).toBeInTheDocument()
-    expect(container.querySelector('[data-ui="settings.content"]')).toBeInTheDocument()
+    expect(container.querySelector('[data-ui~="settings.view"]')).toBeInTheDocument()
+    expect(container.querySelector('[data-ui~="settings.navigation"]')).toBeInTheDocument()
+    expect(container.querySelector('[data-ui~="settings.content"]')).toBeInTheDocument()
     expect(screen.getByText('偏好')).toBeInTheDocument()
 
     const defaultModelItem = screen.getByRole('button', { name: '默认模型' })
@@ -137,9 +148,10 @@ describe('SettingsPage', () => {
   it('keeps default PageHeader mt-3 and launcher inset only on the navigation menu list', () => {
     const { container } = render(<SettingsPage />)
 
-    const navigation = container.querySelector('[data-ui="settings.navigation"]')
-    const content = container.querySelector('[data-ui="settings.content"]')
-    const pageHeader = navigation?.querySelector('header')
+    const navigation = container.querySelector('[data-ui~="settings.navigation"]')
+    const content = container.querySelector('[data-ui~="settings.content"]')
+    const pageHeader = navigation?.querySelector('[data-slot="page-header"]')
+    const navigationScroll = screen.getByTestId('settings-navigation-scroll')
     const menuList = screen.getByTestId('settings-menu-list')
 
     expect(navigation).toBeTruthy()
@@ -148,6 +160,11 @@ describe('SettingsPage', () => {
     // Default spacing for Windows/Linux and mac fullscreen; AppShell titlebar
     // ownership suppresses mt-3 via responsive.css descendant rule.
     expect(pageHeader?.className).toMatch(/\bmt-3\b/)
+    // At short window heights this is the only navigation region allowed to
+    // shrink and scroll; PageHeader itself owns shrink-0.
+    expect(navigation?.className).toMatch(/\bmin-h-0\b/)
+    expect(navigationScroll.className).toMatch(/\bmin-h-0\b/)
+    expect(navigationScroll.className).toMatch(/\bflex-1\b/)
     expect(menuList.className).toContain('--shell-launcher-bottom-inset')
     expect(content?.className).not.toContain('--shell-launcher-bottom-inset')
     expect(navigation?.className).not.toContain('--shell-launcher-bottom-inset')
@@ -155,15 +172,19 @@ describe('SettingsPage', () => {
 
   it('keeps the Settings header selector shape the AppShell titlebar suppress rule targets', () => {
     // responsive.css:
-    // main[data-shell-content-top-inset='titlebar'] [data-ui='settings.navigation'] > header { margin-top: 0 }
+    // main[data-shell-content-top-inset='titlebar'] [data-ui~='settings.navigation'] > [data-slot='page-header']
+    // { margin-top: 0 }
     // Settings owns default mt-3; AppShell owns the attribute that activates the suppress rule.
     const { container } = render(<SettingsPage />)
-    const navigation = container.querySelector('[data-ui="settings.navigation"]')
-    const pageHeader = navigation?.querySelector(':scope > header')
+    const navigation = container.querySelector('[data-ui~="settings.navigation"]')
+    const pageHeader = navigation?.querySelector(':scope > [data-slot="page-header"]')
 
     expect(pageHeader).toBeTruthy()
     expect(pageHeader?.className).toMatch(/\bmt-3\b/)
-    // Direct-child header is required by the descendant rule's `> header` selector.
+    expect(responsiveStyles).toContain(
+      "main[data-shell-content-top-inset='titlebar'] [data-ui~='settings.navigation'] > [data-slot='page-header']"
+    )
+    // Direct-child PageHeader is required by the descendant rule's child selector.
     expect(navigation?.firstElementChild).toBe(pageHeader)
   })
 })
