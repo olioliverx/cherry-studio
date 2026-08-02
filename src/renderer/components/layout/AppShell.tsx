@@ -6,7 +6,7 @@ import { isMac } from '@renderer/utils/platform'
 import { getDefaultRouteTitle, isPageTitledRoute } from '@renderer/utils/routeTitle'
 import { cn } from '@renderer/utils/style'
 import { clearTabInstanceMetadata } from '@renderer/utils/tabInstanceMetadata'
-import { type CSSProperties, useCallback, useEffect, useLayoutEffect, useMemo, useState } from 'react'
+import { type CSSProperties, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 
 import Sidebar from '../app/Sidebar'
 import { createRecentRouteEntryFromTab, recordGlobalSearchRecentEntry } from '../GlobalSearch/globalSearchGroups'
@@ -21,6 +21,7 @@ export const AppShell = () => {
   const { tabs, activeTabId, updateTab } = useTabs()
   const activeTab = useMemo(() => tabs.find((tab) => tab.id === activeTabId), [activeTabId, tabs])
   const [isFullscreen, setIsFullscreen] = useState(false)
+  const receivedFullscreenEvent = useRef(false)
 
   const handleOpenGlobalSearch = useCallback(() => {
     void GlobalSearchPopup.show()
@@ -36,7 +37,9 @@ export const AppShell = () => {
     void ipcApi
       .request('window.is_full_screen')
       .then((value) => {
-        if (!cancelled) {
+        // A native event is newer than this mount-time snapshot. Never let a
+        // late query response restore stale window chrome over that event.
+        if (!cancelled && !receivedFullscreenEvent.current) {
           setIsFullscreen(value)
         }
       })
@@ -49,6 +52,7 @@ export const AppShell = () => {
 
   useIpcOn('window.fullscreen_changed', (value) => {
     if (isMac) {
+      receivedFullscreenEvent.current = true
       setIsFullscreen(value)
     }
   })
@@ -93,11 +97,12 @@ export const AppShell = () => {
   }
 
   // AppShell owns the effective content-top inset on macOS non-fullscreen so
-  // every route clears the traffic-light band once. Chat-local reserves read
-  // --shell-local-top-inset (zeroed here) so they do not double-pad.
+  // every route clears the traffic-light band once. It always zeros chat-local
+  // reserves: fullscreen has no titlebar, while detached windows keep the CSS
+  // default because they are outside AppShell ownership.
   const ownsContentTopInset = isMac && !isFullscreen
   const contentTopInsetValue = ownsContentTopInset ? 'var(--shell-titlebar-height)' : '0px'
-  const localTopInsetValue = ownsContentTopInset ? '0px' : isMac ? 'var(--shell-titlebar-height)' : '0px'
+  const localTopInsetValue = '0px'
   const shellGeometryStyle = {
     '--shell-content-top-inset': contentTopInsetValue,
     '--shell-local-top-inset': localTopInsetValue
@@ -180,7 +185,7 @@ export const AppShell = () => {
   return (
     <div
       data-shell-variant="chatwise"
-      data-shell-local-top-inset={ownsContentTopInset ? 'none' : 'titlebar'}
+      data-shell-local-top-inset="none"
       style={shellGeometryStyle}
       className={cn(
         'relative flex h-screen w-screen flex-row overflow-hidden text-foreground',

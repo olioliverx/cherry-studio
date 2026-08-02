@@ -240,6 +240,35 @@ describe('AppShell', () => {
     expect(screen.getByTestId('macos-traffic-light-drag-region')).toBeInTheDocument()
   })
 
+  it('does not let the initial fullscreen query overwrite a newer fullscreen event', async () => {
+    mocks.platformState.isMac = true
+    let resolveInitialState: ((value: boolean) => void) | undefined
+    mocks.ipcRequest.mockImplementationOnce(
+      () =>
+        new Promise<boolean>((resolve) => {
+          resolveInitialState = resolve
+        })
+    )
+
+    render(<AppShell />)
+
+    act(() => {
+      mocks.ipcHandlers.get('window.fullscreen_changed')?.(true)
+    })
+
+    await waitFor(() => {
+      expect(screen.queryByTestId('macos-traffic-light-spacer')).toBeNull()
+    })
+
+    await act(async () => {
+      resolveInitialState?.(false)
+      await Promise.resolve()
+    })
+
+    expect(screen.queryByTestId('macos-traffic-light-spacer')).toBeNull()
+    expect(screen.getByTestId('tab-router').closest('main')).toHaveAttribute('data-shell-content-top-inset', 'none')
+  })
+
   it('owns a titlebar content-top inset on macOS non-fullscreen and zeros chat-local residual', () => {
     mocks.platformState.isMac = true
 
@@ -258,13 +287,31 @@ describe('AppShell', () => {
     expect(root).toHaveAttribute('data-shell-local-top-inset', 'none')
   })
 
-  it('clears content-top inset on macOS fullscreen and restores it when leaving fullscreen', async () => {
+  it('clears all AppShell titlebar insets in fullscreen and restores only the shared inset on exit', async () => {
     mocks.platformState.isMac = true
+    let resolveInitialState: ((value: boolean) => void) | undefined
+    mocks.ipcRequest.mockImplementationOnce(
+      () =>
+        new Promise<boolean>((resolve) => {
+          resolveInitialState = resolve
+        })
+    )
 
     const { container } = render(<AppShell />)
+    const root = container.firstElementChild
+
+    if (!(root instanceof HTMLElement)) {
+      throw new Error('Expected AppShell root')
+    }
 
     expect(screen.getByTestId('tab-router').closest('main')).toHaveAttribute('data-shell-content-top-inset', 'titlebar')
-    expect(container.firstElementChild).toHaveAttribute('data-shell-local-top-inset', 'none')
+    expect(root).toHaveAttribute('data-shell-local-top-inset', 'none')
+    expect(root.style.getPropertyValue('--shell-local-top-inset')).toBe('0px')
+
+    await act(async () => {
+      resolveInitialState?.(false)
+      await Promise.resolve()
+    })
 
     act(() => {
       mocks.ipcHandlers.get('window.fullscreen_changed')?.(true)
@@ -275,7 +322,12 @@ describe('AppShell', () => {
       expect(screen.queryByTestId('macos-traffic-light-drag-region')).toBeNull()
       // Ownership attributes flip with fullscreen; token values follow the same branch.
       expect(screen.getByTestId('tab-router').closest('main')).toHaveAttribute('data-shell-content-top-inset', 'none')
-      expect(container.firstElementChild).toHaveAttribute('data-shell-local-top-inset', 'titlebar')
+      expect(root).toHaveAttribute('data-shell-local-top-inset', 'none')
+      expect(root.style.getPropertyValue('--shell-content-top-inset')).toBe('0px')
+      expect(root.style.getPropertyValue('--shell-local-top-inset')).toBe('0px')
+      // The portal host receives the same active geometry as the in-tree shell.
+      expect(document.documentElement.style.getPropertyValue('--shell-content-top-inset')).toBe('0px')
+      expect(document.documentElement.style.getPropertyValue('--shell-local-top-inset')).toBe('0px')
     })
 
     act(() => {
@@ -289,7 +341,13 @@ describe('AppShell', () => {
         'data-shell-content-top-inset',
         'titlebar'
       )
-      expect(container.firstElementChild).toHaveAttribute('data-shell-local-top-inset', 'none')
+      expect(root).toHaveAttribute('data-shell-local-top-inset', 'none')
+      expect(root.style.getPropertyValue('--shell-content-top-inset')).toBe('var(--shell-titlebar-height)')
+      expect(root.style.getPropertyValue('--shell-local-top-inset')).toBe('0px')
+      expect(document.documentElement.style.getPropertyValue('--shell-content-top-inset')).toBe(
+        'var(--shell-titlebar-height)'
+      )
+      expect(document.documentElement.style.getPropertyValue('--shell-local-top-inset')).toBe('0px')
     })
   })
 
