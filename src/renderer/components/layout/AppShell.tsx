@@ -13,6 +13,7 @@ import { createRecentRouteEntryFromTab, recordGlobalSearchRecentEntry } from '..
 import GlobalSearchPopup from '../GlobalSearch/GlobalSearchPopup'
 import MiniAppTabsPool from '../MiniApp/MiniAppTabsPool'
 import { ResourceViewSourceProvider } from '../ResourceViewSourceProvider'
+import { useHasWindowControls, WindowControls } from '../WindowControls'
 import { TabRouter } from './TabRouter'
 
 /** ChatWise-style shell: no icon rail, no tab bar — all routes. */
@@ -22,6 +23,11 @@ export const AppShell = () => {
   const activeTab = useMemo(() => tabs.find((tab) => tab.id === activeTabId), [activeTabId, tabs])
   const [isFullscreen, setIsFullscreen] = useState(false)
   const receivedFullscreenEvent = useRef(false)
+  const detectedWindowControls = useHasWindowControls()
+  // Linux applies `frame` only when BrowserWindow is created, then relaunches
+  // after this preference changes. Keep renderer chrome aligned to that frame
+  // for the lifetime of this AppShell rather than reacting before relaunch.
+  const hasWindowControls = useRef(detectedWindowControls).current
 
   const handleOpenGlobalSearch = useCallback(() => {
     void GlobalSearchPopup.show()
@@ -30,8 +36,15 @@ export const AppShell = () => {
   useCommandHandler('app.search', handleOpenGlobalSearch)
   useMainWindowNavigation()
 
+  // Subscribe before requesting the initial snapshot. A native transition that
+  // races the request is newer and must win over its late response.
+  useIpcOn('window.fullscreen_changed', (value) => {
+    receivedFullscreenEvent.current = true
+    setIsFullscreen(value)
+  })
+
   useEffect(() => {
-    if (!isMac) return
+    if (!isMac && !hasWindowControls) return
 
     let cancelled = false
     void ipcApi
@@ -48,14 +61,7 @@ export const AppShell = () => {
     return () => {
       cancelled = true
     }
-  }, [])
-
-  useIpcOn('window.fullscreen_changed', (value) => {
-    if (isMac) {
-      receivedFullscreenEvent.current = true
-      setIsFullscreen(value)
-    }
-  })
+  }, [hasWindowControls])
 
   const recordRouteVisit = useCallback((tab: typeof activeTab, lastAccessTime = tab?.lastAccessTime) => {
     if (!tab) return
@@ -123,6 +129,21 @@ export const AppShell = () => {
   // launcher/Dialog lifecycle stays in app/Sidebar.
   const [drawerOpen, setDrawerOpen] = useState(false)
 
+  // The retired tab bar owned both the drag surface and renderer window controls
+  // for frameless Windows/Linux. Keep that platform chrome as one shell-reserved
+  // row: routes need no padding, and fullscreen/native-titlebar modes add nothing.
+  const windowChrome = hasWindowControls && !isFullscreen && (
+    <div
+      data-ui="shell.window-chrome"
+      inert={drawerOpen || undefined}
+      className={cn(
+        'relative isolate z-0 flex h-9 w-full shrink-0 items-stretch justify-end bg-background',
+        drawerOpen ? '[-webkit-app-region:no-drag]' : '[-webkit-app-region:drag]'
+      )}>
+      <WindowControls hasWindowControls={hasWindowControls} />
+    </div>
+  )
+
   const contentArea = (
     <div className="flex min-h-0 min-w-0 flex-1 flex-col">
       <main
@@ -163,7 +184,12 @@ export const AppShell = () => {
     </div>
   )
 
-  const contentColumn = <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">{contentArea}</div>
+  const contentColumn = (
+    <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
+      {windowChrome}
+      {contentArea}
+    </div>
+  )
   const sidebar = <Sidebar drawerOpen={drawerOpen} onDrawerOpenChange={setDrawerOpen} />
 
   if (!isMac) {
