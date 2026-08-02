@@ -65,6 +65,6 @@
 
 /* Settings header: drop the default mt-3 only when AppShell already owns the
    titlebar content-top inset. Non-mac / fullscreen keep PageHeader mt-3. */
-main[data-shell-content-top-inset='titlebar'] [data-ui='settings.navigation'] > header {
+main[data-shell-content-top-inset='titlebar'] [data-ui~='settings.navigation'] > [data-slot='page-header'] {
   margin-top: 0;
 }

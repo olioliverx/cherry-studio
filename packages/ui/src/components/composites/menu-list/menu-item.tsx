@@ -91,7 +91,9 @@ function MenuItem({
       {...props}>
       {icon && <span className="flex shrink-0 items-center justify-center">{icon}</span>}
       <span className={cn('min-w-0 text-left', suffix && 'flex-1')}>
-        <span className={cn('block truncate', labelClassName)}>{label}</span>
+        <span className={cn('block truncate', labelClassName)} title={label}>
+          {label}
+        </span>
         {description && (
           <span
             className={cn(

@@ -36,4 +36,14 @@ describe('MenuItem', () => {
     const item = screen.getByTestId('menu-item')
     expect(item).not.toHaveAttribute('data-active')
   })
+
+  it('keeps the full label available when long menu text is visually truncated', () => {
+    const label = 'A realistically long localized navigation destination label'
+
+    render(<MenuItem label={label} />)
+
+    const renderedLabel = screen.getByText(label)
+    expect(renderedLabel).toHaveClass('truncate')
+    expect(renderedLabel).toHaveAttribute('title', label)
+  })
 })
