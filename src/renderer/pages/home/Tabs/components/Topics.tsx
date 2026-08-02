@@ -245,7 +245,7 @@ export function Topics({
   const tabs = useOptionalTabsContext()
   const conversationNav = useConversationNavigation('assistants')
   const isWindowFrame = useWindowFrame().mode === 'window'
-  const [groupNow] = useState(() => dayjs())
+  const [groupNow, setGroupNow] = useState(() => dayjs())
   const { notesPath } = useNotesSettings()
   const {
     updateTopic: patchTopic,
@@ -264,7 +264,6 @@ export function Topics({
     panePosition === undefined ? (onSetPanePosition ?? setStoredPanePosition) : onSetPanePosition
   // Keep the legacy preference token (`tags`) while grouping by canonical Group rows.
   const isGroupGrouping = assistantSortType === 'tags'
-  const [topicExpansionTime, setTopicExpansionTime] = usePersistCache('ui.topic.expansion.time')
   const [topicExpansionAssistant, setTopicExpansionAssistant] = usePersistCache('ui.topic.expansion.assistant')
   const [renamingTopics] = useCache('topic.renaming')
   const [newlyRenamedTopics] = useCache('topic.newly_renamed')
@@ -275,13 +274,39 @@ export function Topics({
   })
   const [exportMenuOptions] = useMultiplePreferences(TOPIC_EXPORT_MENU_PREFERENCE_KEYS)
   const displayMode = isRightPanel ? 'time' : (topicDisplayMode ?? 'time')
+
+  useEffect(() => {
+    if (displayMode !== 'time') return
+
+    let timeout: number | undefined
+    const refreshAndSchedule = () => {
+      if (timeout !== undefined) window.clearTimeout(timeout)
+
+      const now = dayjs()
+      setGroupNow(now)
+      const delay = now.add(1, 'day').startOf('day').diff(now) + 1
+      timeout = window.setTimeout(refreshAndSchedule, delay)
+    }
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') refreshAndSchedule()
+    }
+
+    refreshAndSchedule()
+    window.addEventListener('focus', refreshAndSchedule)
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+    return () => {
+      if (timeout !== undefined) window.clearTimeout(timeout)
+      window.removeEventListener('focus', refreshAndSchedule)
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
+    }
+  }, [displayMode])
+
   const defaultGroupVisibleCount = isRightPanel
     ? Number.POSITIVE_INFINITY
     : displayMode === 'time'
       ? LEFT_PANEL_TIME_TOPIC_GROUP_VISIBLE_COUNT
       : DEFAULT_TOPIC_GROUP_VISIBLE_COUNT
   const isAssistantDisplayMode = displayMode === 'assistant'
-  const topicExpansion = isAssistantDisplayMode ? topicExpansionAssistant : topicExpansionTime
 
   const {
     isLoading: isTopicPinsLoading,
@@ -765,11 +790,11 @@ export function Topics({
   )
   const getGroupHeaderClickBehavior = useCallback(
     (group: { id: string }) => {
-      if (isRightPanel) return 'none'
+      if (!isAssistantDisplayMode) return 'none'
 
-      return displayMode === 'assistant' && group.id !== TOPIC_PINNED_GROUP_ID ? 'select-first-then-toggle' : 'toggle'
+      return group.id !== TOPIC_PINNED_GROUP_ID ? 'select-first-then-toggle' : 'toggle'
     },
-    [displayMode, isRightPanel]
+    [isAssistantDisplayMode]
   )
   const listError =
     error ||
@@ -1075,14 +1100,14 @@ export function Topics({
 
   const collapsedTopicState = useMemo(
     () =>
-      isRightPanel
+      !isAssistantDisplayMode
         ? EMPTY_COLLAPSED_TOPIC_STATE
         : resolveDefaultCollapsedGroupIds({
-            collapsedIds: topicExpansion,
+            collapsedIds: topicExpansionAssistant,
             groupBy: topicGroupBy,
             items: filteredTopics
           }),
-    [filteredTopics, isRightPanel, topicExpansion, topicGroupBy]
+    [filteredTopics, isAssistantDisplayMode, topicExpansionAssistant, topicGroupBy]
   )
   const topicAssistantSectionIds = useMemo(
     () =>
@@ -1096,12 +1121,11 @@ export function Topics({
   )
   const handleTopicCollapsedStateChange = useCallback(
     (nextCollapsedIds: string[]) => {
-      if (isRightPanel) return
+      if (!isAssistantDisplayMode) return
 
-      if (isAssistantDisplayMode) setTopicExpansionAssistant(nextCollapsedIds)
-      else setTopicExpansionTime(nextCollapsedIds)
+      setTopicExpansionAssistant(nextCollapsedIds)
     },
-    [isAssistantDisplayMode, isRightPanel, setTopicExpansionAssistant, setTopicExpansionTime]
+    [isAssistantDisplayMode, setTopicExpansionAssistant]
   )
   const handleTopicDisplayModeChange = useCallback(
     (nextMode: TopicDisplayMode) => {
