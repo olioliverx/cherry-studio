@@ -176,6 +176,37 @@ describe('Topics helpers', () => {
     expect(getTopicTimeBucket(localIso(2026, 5, 8, 23), now)).toBe('earlier')
   })
 
+  it('uses local calendar boundaries across midnight and the year boundary', () => {
+    const afterMidnight = new Date(2026, 0, 1, 0, 15)
+
+    expect(getTopicTimeBucket(localIso(2026, 1, 1, 0), afterMidnight)).toBe('today')
+    expect(getTopicTimeBucket(localIso(2025, 12, 31, 23), afterMidnight)).toBe('yesterday')
+    expect(getTopicTimeBucket(localIso(2025, 12, 27, 23), afterMidnight)).toBe('earlier')
+  })
+
+  it('uses calendar-day subtraction rather than fixed 24-hour windows', () => {
+    const originalTimezone = process.env.TZ
+
+    try {
+      process.env.TZ = 'America/New_York'
+      // Vitest workers inherit TZ=UTC at startup, so encode New York's transition offsets explicitly.
+      const fallBackDay = new Date('2026-11-01T00:00:00-04:00')
+      const afterFallBackDay = new Date('2026-11-02T00:15:00-05:00')
+      const springForwardDay = new Date('2026-03-08T00:00:00-05:00')
+      const afterSpringForwardDay = new Date('2026-03-09T00:15:00-04:00')
+
+      expect(afterFallBackDay.getTime() - fallBackDay.getTime()).toBe(25.25 * 60 * 60 * 1000)
+      expect(afterSpringForwardDay.getTime() - springForwardDay.getTime()).toBe(23.25 * 60 * 60 * 1000)
+      expect(getTopicTimeBucket(fallBackDay.toISOString(), afterFallBackDay)).toBe('yesterday')
+      expect(getTopicTimeBucket(afterFallBackDay.toISOString(), afterFallBackDay)).toBe('today')
+      expect(getTopicTimeBucket(springForwardDay.toISOString(), afterSpringForwardDay)).toBe('yesterday')
+      expect(getTopicTimeBucket(afterSpringForwardDay.toISOString(), afterSpringForwardDay)).toBe('today')
+    } finally {
+      if (originalTimezone === undefined) delete process.env.TZ
+      else process.env.TZ = originalTimezone
+    }
+  })
+
   it('builds time display groups with pinned topics taking precedence', () => {
     const now = new Date(2026, 4, 15, 12)
     const groupTopic = createTopicDisplayGroupResolver({ mode: 'time', labels: TOPIC_GROUP_LABELS, now })

@@ -889,6 +889,9 @@ describe('Topics', () => {
     expect(screen.getByText('Yesterday')).toBeInTheDocument()
     expect(screen.getByText('This week')).toBeInTheDocument()
     expect(screen.getByText('Earlier')).toBeInTheDocument()
+    for (const heading of ['Pinned', 'Today', 'Yesterday', 'This week', 'Earlier']) {
+      expect(screen.queryByRole('button', { name: heading })).not.toBeInTheDocument()
+    }
     expect(screen.getByText('Beta pinned')).toBeInTheDocument()
     const pinnedRow = getByText('Beta pinned').closest('[data-testid="topic-list-row"]')
     const unpinButton = pinnedRow?.querySelector('[aria-label="Unpin Conversation"]')
@@ -902,6 +905,98 @@ describe('Topics', () => {
 
     fireEvent.click(screen.getByText('Gamma topic'))
     expect(setActiveTopic).toHaveBeenCalledWith(expect.objectContaining({ id: 'topic-c' }))
+  })
+
+  it('refreshes time groups when the local calendar day rolls over', () => {
+    vi.setSystemTime(new Date(2026, 0, 3, 23, 59, 59, 900))
+    MockUsePreferenceUtils.setPreferenceValue('topic.tab.display_mode' as never, 'time')
+    renderTopicList()
+
+    expect(screen.getByText('Today')).toBeInTheDocument()
+    expect(screen.getByText('Alpha topic')).toBeInTheDocument()
+
+    act(() => {
+      vi.advanceTimersByTime(200)
+    })
+
+    expect(screen.queryByText('Today')).not.toBeInTheDocument()
+    expect(screen.getByText('Yesterday')).toBeInTheDocument()
+    expect(screen.getByText('Alpha topic')).toBeInTheDocument()
+  })
+
+  it('refreshes stale time groups immediately when the same list switches from assistant mode', () => {
+    const { rerenderTopicList } = renderTopicList()
+    const addWindowListener = vi.spyOn(window, 'addEventListener')
+    const removeWindowListener = vi.spyOn(window, 'removeEventListener')
+    const addDocumentListener = vi.spyOn(document, 'addEventListener')
+    const removeDocumentListener = vi.spyOn(document, 'removeEventListener')
+
+    try {
+      vi.setSystemTime(new Date(2026, 0, 4, 12))
+      MockUsePreferenceUtils.setPreferenceValue('topic.tab.display_mode' as never, 'time')
+      rerenderTopicList()
+
+      expect(screen.queryByText('Today')).not.toBeInTheDocument()
+      expect(screen.getByText('Yesterday')).toBeInTheDocument()
+      expect(screen.getByText('Alpha topic')).toBeInTheDocument()
+
+      const focusListeners = addWindowListener.mock.calls.filter(([type]) => String(type) === 'focus')
+      const visibilityListeners = addDocumentListener.mock.calls.filter(([type]) => type === 'visibilitychange')
+      expect(focusListeners).toHaveLength(1)
+      expect(visibilityListeners).toHaveLength(1)
+
+      rerenderTopicList()
+      expect(addWindowListener.mock.calls.filter(([type]) => String(type) === 'focus')).toHaveLength(1)
+      expect(addDocumentListener.mock.calls.filter(([type]) => type === 'visibilitychange')).toHaveLength(1)
+
+      MockUsePreferenceUtils.setPreferenceValue('topic.tab.display_mode' as never, 'assistant')
+      rerenderTopicList()
+      expect(removeWindowListener).toHaveBeenCalledWith('focus', focusListeners[0][1])
+      expect(removeDocumentListener).toHaveBeenCalledWith('visibilitychange', visibilityListeners[0][1])
+    } finally {
+      addWindowListener.mockRestore()
+      removeWindowListener.mockRestore()
+      addDocumentListener.mockRestore()
+      removeDocumentListener.mockRestore()
+    }
+  })
+
+  it('refreshes stale time groups when the window resumes by focus or visibility', () => {
+    const visibilityState = vi.spyOn(document, 'visibilityState', 'get').mockReturnValue('visible')
+    MockUsePreferenceUtils.setPreferenceValue('topic.tab.display_mode' as never, 'time')
+    renderTopicList()
+
+    vi.setSystemTime(new Date(2026, 0, 4, 12))
+    fireEvent.focus(window)
+
+    expect(screen.queryByText('Today')).not.toBeInTheDocument()
+    expect(screen.getByText('Yesterday')).toBeInTheDocument()
+
+    vi.setSystemTime(new Date(2026, 0, 5, 12))
+    act(() => {
+      document.dispatchEvent(new Event('visibilitychange'))
+    })
+
+    expect(screen.queryByText('Yesterday')).not.toBeInTheDocument()
+    expect(screen.getByText('Alpha topic')).toBeInTheDocument()
+    visibilityState.mockRestore()
+  })
+
+  it('filters before time grouping and keeps non-interactive headings out of keyboard navigation', () => {
+    renderTopicList({ assistantIdFilter: 'assistant-2', presentation: 'right-panel' })
+    const search = screen.getByRole('textbox', { name: 'Search conversations' })
+
+    fireEvent.change(search, { target: { value: 'epsilon' } })
+
+    expect(screen.getByText('Yesterday')).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Yesterday' })).not.toBeInTheDocument()
+    expect(screen.getAllByText('Epsilon yesterday')).toHaveLength(1)
+    expect(screen.queryByText('Today')).not.toBeInTheDocument()
+    expect(screen.queryByText('Earlier')).not.toBeInTheDocument()
+
+    const listbox = screen.getByRole('listbox')
+    fireEvent.keyDown(listbox, { key: 'End' })
+    expect(listbox).toHaveAttribute('aria-activedescendant', 'resource-list-option-topic-e')
   })
 
   it('shows a new conversation placeholder for empty topic names', () => {
@@ -2340,51 +2435,35 @@ describe('Topics', () => {
     }
   })
 
-  it('keeps the pinned group first and lets each group collapse independently', () => {
-    MockUsePreferenceUtils.setPreferenceValue('topic.tab.display_mode' as never, 'time')
-    setTopicGroupExpansionCache(createExpandedTopicGroupExpansionFixture())
-    const { rerenderTopicList } = renderTopicList()
-
-    const groupButtons = screen.getAllByRole('button', { expanded: true })
-    expect(groupButtons.map((button) => button.textContent)).toEqual([
-      'Pinned',
-      'Today',
-      'Yesterday',
-      'This week',
-      'Earlier'
-    ])
-
-    fireEvent.click(screen.getByRole('button', { name: 'Pinned' }))
-    rerenderTopicList()
-
-    expect(screen.getByRole('button', { name: 'Pinned' })).toHaveAttribute('aria-expanded', 'false')
-    expect(screen.queryByText('Beta pinned')).not.toBeInTheDocument()
-    expect(screen.getByText('Alpha topic')).toBeInTheDocument()
-  })
-
-  it('restores and persists collapsed topic groups from cache', () => {
+  it('keeps time headings non-interactive and pinned topics in the first fully expanded group', () => {
     MockUsePreferenceUtils.setPreferenceValue('topic.tab.display_mode' as never, 'time')
     setTopicGroupExpansionCache({
       ...createExpandedTopicGroupExpansionFixture(),
-      // Collapse everything except "today".
-      time: ALL_TOPIC_TIME_GROUP_IDS.filter((id) => id !== 'topic:time:today')
+      time: ALL_TOPIC_TIME_GROUP_IDS
+    })
+    renderTopicList()
+
+    for (const heading of ['Pinned', 'Today', 'Yesterday', 'This week', 'Earlier']) {
+      expect(screen.getByText(heading)).toBeInTheDocument()
+      expect(screen.queryByRole('button', { name: heading })).not.toBeInTheDocument()
+    }
+    expect(screen.getByText('Beta pinned')).toBeInTheDocument()
+    expect(screen.getByText('Alpha topic')).toBeInTheDocument()
+  })
+
+  it('does not let legacy time-group expansion state hide temporal history', () => {
+    MockUsePreferenceUtils.setPreferenceValue('topic.tab.display_mode' as never, 'time')
+    setTopicGroupExpansionCache({
+      ...createExpandedTopicGroupExpansionFixture(),
+      time: ALL_TOPIC_TIME_GROUP_IDS
     })
 
-    const { rerenderTopicList } = renderTopicList()
+    renderTopicList()
 
-    expect(screen.getByRole('button', { name: 'Today' })).toHaveAttribute('aria-expanded', 'true')
+    expect(screen.queryByRole('button', { name: 'Today' })).not.toBeInTheDocument()
     expect(screen.getByText('Alpha topic')).toBeInTheDocument()
-    expect(screen.queryByText('Beta pinned')).not.toBeInTheDocument()
-
-    fireEvent.click(screen.getByRole('button', { name: 'Today' }))
-    expect(getTopicGroupExpansionCache().time).toContain('topic:time:today')
-    rerenderTopicList()
-    expect(screen.getByRole('button', { name: 'Today' })).toHaveAttribute('aria-expanded', 'false')
-
-    fireEvent.click(screen.getByRole('button', { name: 'Pinned' }))
-    expect(getTopicGroupExpansionCache().time).not.toContain('topic:pinned')
-    rerenderTopicList()
-    expect(screen.getByRole('button', { name: 'Pinned' })).toHaveAttribute('aria-expanded', 'true')
+    expect(screen.getByText('Beta pinned')).toBeInTheDocument()
+    expect(getTopicGroupExpansionCache().time).toEqual(ALL_TOPIC_TIME_GROUP_IDS)
   })
 
   it('renders the topic header display mode and history actions in the shared menu', async () => {
@@ -2521,7 +2600,8 @@ describe('Topics', () => {
 
     const { rerenderTopicList } = renderTopicList()
 
-    expect(screen.getByRole('button', { name: 'Today' })).toHaveAttribute('aria-expanded', 'true')
+    expect(screen.getByText('Today')).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Today' })).not.toBeInTheDocument()
     expect(screen.queryByText('Topic 51')).not.toBeInTheDocument()
 
     rerenderTopicList({ itemId: 'topic-51', requestId: 1, clearFilters: true, clearQuery: true })
@@ -2531,7 +2611,7 @@ describe('Topics', () => {
     expect(revealedRow).not.toBeNull()
     expect(revealedRow!).toHaveAttribute('data-reveal-focus', 'true')
     expect(screen.queryByRole('button', { name: 'Cancel' })).not.toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Today' })).toHaveAttribute('aria-expanded', 'true')
+    expect(screen.queryByRole('button', { name: 'Today' })).not.toBeInTheDocument()
     expect(virtualMocks.scrollToIndex).toHaveBeenCalledWith(expect.any(Number), { align: 'center' })
   })
 
@@ -2555,7 +2635,7 @@ describe('Topics', () => {
     renderTopicList()
 
     for (const groupName of ['Pinned', 'Today', 'Yesterday', 'This week', 'Earlier'] as const) {
-      const header = screen.getByRole('button', { name: groupName }).closest('div')
+      const header = screen.getByText(groupName).closest('div')
       expect(header).toBeInTheDocument()
       expect(
         within(header as HTMLElement).queryByRole('button', { name: 'chat.conversation.new' })
