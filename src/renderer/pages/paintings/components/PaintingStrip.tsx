@@ -111,7 +111,11 @@ const PaintingStrip: FC<PaintingStripProps> = ({
 
   return (
     <>
-      <div ref={stripRef} className={paintingClasses.historyStrip} onScroll={handleScroll}>
+      <div
+        ref={stripRef}
+        data-ui="paintings.painting-strip"
+        className={paintingClasses.historyStrip}
+        onScroll={handleScroll}>
         <Tooltip content={t('paintings.button.new.image')} placement="right" delay={500}>
           <Button
             type="button"
