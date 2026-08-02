@@ -80,7 +80,8 @@ describe('PaintingStrip', () => {
     expect(strip).toBeTruthy()
     expect(strip).toHaveAttribute('data-ui', 'paintings.painting-strip')
     expect(strip?.className).toContain('w-[68px]')
-    expect(strip?.className).toContain('--shell-launcher-bottom-inset')
+    expect(strip).toHaveClass('shell-launcher-clearance')
+    expect(strip?.className).not.toContain('--shell-launcher-bottom-inset')
     // No local titlebar pad — AppShell owns content-top inset.
     expect(strip?.className).not.toMatch(/pt-\[var\(--shell-titlebar/)
     expect(screen.getByRole('button', { name: 'paintings.button.new.image' })).toBeInTheDocument()

@@ -57,6 +57,13 @@ describe('TranslateInputPane', () => {
     dragState.isDragging = false
   })
 
+  it('applies shared launcher clearance without removing the upload action', () => {
+    const { container } = render(<TranslateInputPane {...baseProps()} />)
+
+    expect(container.firstElementChild).toHaveClass('shell-launcher-clearance', 'shell-launcher-clearance-flush')
+    expect(screen.getByRole('button', { name: 'translate.files.upload' })).toBeInTheDocument()
+  })
+
   it('disables file upload while the parent pane is disabled', () => {
     const props = baseProps()
     render(<TranslateInputPane {...props} disabled />)

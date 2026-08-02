@@ -345,7 +345,7 @@ const NotesSidebar: FC<NotesSidebarProps> = ({
         onSelectSortType={handleSelectSortType}
       />
 
-      <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+      <div className="shell-launcher-clearance shell-launcher-clearance-flush flex min-h-0 flex-1 flex-col overflow-hidden">
         {isShowSearch && isSearching && (
           <div className="flex items-center gap-2 border-border-subtle border-b bg-sidebar-accent px-3 py-2 text-muted-foreground text-xs">
             <Loader2 size={14} className="animate-spin" />

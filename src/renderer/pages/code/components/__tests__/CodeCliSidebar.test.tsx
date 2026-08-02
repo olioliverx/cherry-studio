@@ -28,7 +28,7 @@ function renderSidebar(
   statuses: CodeCliSidebarProps['statuses'] = {},
   providerSummaries: CodeCliSidebarProps['providerSummaries'] = {}
 ) {
-  render(
+  return render(
     <CodeCliSidebar
       tools={tools as unknown as CodeCliSidebarProps['tools']}
       selectedCliTool={CodeCli.CLAUDE_CODE}
@@ -67,5 +67,11 @@ describe('CodeCliSidebar', () => {
 
     expect(screen.getByRole('button', { name: /Claude Code/ })).toHaveTextContent('deepseek-v4-flash')
     expect(screen.getByRole('button', { name: /OpenAI Codex/ }).textContent).not.toContain('deepseek-v4-flash')
+  })
+
+  it('applies shared launcher clearance to the tool list viewport', () => {
+    const { container } = renderSidebar()
+
+    expect(container.querySelector('.shell-launcher-clearance')).toBeInTheDocument()
   })
 })

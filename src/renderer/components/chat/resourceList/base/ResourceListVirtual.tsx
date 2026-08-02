@@ -326,10 +326,14 @@ function useResourceListListboxNavigation<T extends ResourceListItemBase>({
   useEffect(() => store.subscribeListbox(syncActiveDescendant), [store, syncActiveDescendant])
 
   const scrollItemIntoView = useCallback(
-    (itemId: string) => {
+    (itemId: string, finalItem: boolean) => {
       const rowIndex = getVirtualRowIndex(virtualRows, itemId, getItemId)
       if (rowIndex >= 0) {
-        virtualListRef.current?.scrollToIndex(rowIndex, { align: 'auto' })
+        const finalRowIndex = virtualRows.length - 1
+        const trailingFooter = finalItem && virtualRows[finalRowIndex]?.type === 'group-footer'
+        virtualListRef.current?.scrollToIndex(trailingFooter ? finalRowIndex : rowIndex, {
+          align: trailingFooter ? 'end' : 'auto'
+        })
       }
     },
     [getItemId, virtualListRef, virtualRows]
@@ -337,11 +341,12 @@ function useResourceListListboxNavigation<T extends ResourceListItemBase>({
 
   const moveActiveItem = useCallback(
     (nextIndex: number) => {
-      const item = virtualItems[clampVirtualItemIndex(nextIndex, virtualItems.length)]
+      const itemIndex = clampVirtualItemIndex(nextIndex, virtualItems.length)
+      const item = virtualItems[itemIndex]
       if (!item) return
       const itemId = getItemId(item.item)
       actions.setActiveItem(itemId)
-      scrollItemIntoView(itemId)
+      scrollItemIntoView(itemId, itemIndex === virtualItems.length - 1)
     },
     [actions, getItemId, scrollItemIntoView, virtualItems]
   )

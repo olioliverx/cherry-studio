@@ -889,6 +889,7 @@ describe('Topics', () => {
     expect(screen.getByText('Yesterday')).toBeInTheDocument()
     expect(screen.getByText('This week')).toBeInTheDocument()
     expect(screen.getByText('Earlier')).toBeInTheDocument()
+    expect(screen.getByRole('listbox')).toHaveClass('shell-launcher-clearance')
     for (const heading of ['Pinned', 'Today', 'Yesterday', 'This week', 'Earlier']) {
       expect(screen.queryByRole('button', { name: heading })).not.toBeInTheDocument()
     }
@@ -995,6 +996,7 @@ describe('Topics', () => {
     expect(screen.queryByText('Earlier')).not.toBeInTheDocument()
 
     const listbox = screen.getByRole('listbox')
+    expect(listbox).not.toHaveClass('shell-launcher-clearance')
     fireEvent.keyDown(listbox, { key: 'End' })
     expect(listbox).toHaveAttribute('aria-activedescendant', 'resource-list-option-topic-e')
   })

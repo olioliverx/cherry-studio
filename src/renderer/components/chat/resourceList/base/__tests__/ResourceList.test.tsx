@@ -649,6 +649,41 @@ describe('ResourceList', () => {
     expect(onSelectItem).toHaveBeenCalledWith('beta')
   })
 
+  it('scrolls through a trailing group footer when End reaches the final interactive item', () => {
+    const Provider = ResourceList.Provider<TestItem>
+    const items = Array.from({ length: 8 }, (_, index) => ({
+      id: `topic-${index + 1}`,
+      name: `Topic ${index + 1}`,
+      kind: 'topic' as const,
+      updatedAt: index
+    }))
+
+    render(
+      <Provider
+        items={items}
+        defaultGroupVisibleCount={5}
+        groupBy={() => ({ id: 'topics', label: 'Topics' })}
+        groupShowMoreLabel="Show more">
+        <ResourceList.Frame>
+          <ResourceList.VirtualItems<TestItem>
+            renderItem={(item) => (
+              <ResourceList.Item item={item}>
+                <span>{item.name}</span>
+              </ResourceList.Item>
+            )}
+          />
+        </ResourceList.Frame>
+      </Provider>
+    )
+
+    virtualMocks.scrollToIndex.mockClear()
+    const listbox = screen.getByRole('listbox')
+    fireEvent.keyDown(listbox, { key: 'End' })
+
+    expect(listbox).toHaveAttribute('aria-activedescendant', 'resource-list-option-topic-5')
+    expect(virtualMocks.scrollToIndex).toHaveBeenCalledWith(6, { align: 'end' })
+  })
+
   it('updates only the renamed row when inline rename starts', () => {
     const renderCounts = new Map<string, number>()
     const Provider = ResourceList.Provider<TestItem>

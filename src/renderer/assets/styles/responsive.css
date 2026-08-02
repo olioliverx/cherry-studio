@@ -17,14 +17,25 @@
   --shell-local-top-inset: var(--shell-titlebar-height);
   /*
    * Bottom inset for the hidden-layout global launcher. Published by app/Sidebar when
-   * the global rail is hidden; 0 for icon/full layouts. Consumed only by route-local
-   * scroll content that can collide with the launcher (Settings nav, Paintings strip).
+   * the global rail is hidden; 0 for icon/full layouts. Route-owned left scroll/control
+   * surfaces opt into the shared clearance classes below.
    */
   --shell-launcher-bottom-inset: 0px;
   --sidebar-width: 200px;
   --assistants-width: 275px;
   --topic-list-width: 275px;
   --settings-width: 250px;
+}
+
+/* Keeps the final interactive row above the hidden-layout launcher while preserving
+   the established 12px bottom rhythm. Use the flush modifier when the owning surface
+   already provides its own inner bottom spacing. */
+.shell-launcher-clearance {
+  padding-bottom: calc(calc(var(--spacing) * 3) + var(--shell-launcher-bottom-inset));
+}
+
+.shell-launcher-clearance.shell-launcher-clearance-flush {
+  padding-bottom: var(--shell-launcher-bottom-inset);
 }
 
 /* lg */
