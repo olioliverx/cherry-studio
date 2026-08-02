@@ -103,9 +103,8 @@ export const AppShell = () => {
   }
 
   // AppShell owns the effective content-top inset on macOS non-fullscreen so
-  // every route clears the traffic-light band once. It always zeros chat-local
-  // reserves: fullscreen has no titlebar, while detached windows keep the CSS
-  // default because they are outside AppShell ownership.
+  // every route clears the traffic-light band once. It zeros chat-local reserves
+  // under the main shell; detached windows publish their own value from SubWindowAppShell.
   const ownsContentTopInset = isMac && !isFullscreen
   const contentTopInsetValue = ownsContentTopInset ? 'var(--shell-titlebar-height)' : '0px'
   const localTopInsetValue = '0px'
