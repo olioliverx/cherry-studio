@@ -87,6 +87,10 @@ vi.mock('../../WindowControls', () => ({
   WindowControls: () => null
 }))
 
+vi.mock('../OpenTabsMenu', () => ({
+  OpenTabsMenu: () => <button type="button">Open Tabs</button>
+}))
+
 import { ShellTabBarActions, SidebarShellActions, useShellTabBarLayout } from '../ShellTabBarActions'
 
 afterEach(() => {
@@ -127,6 +131,7 @@ describe('ShellTabBarActions', () => {
     render(<SidebarShellActions layout="icon" onSettingsClick={mocks.openSettingsTab} />)
 
     expect(screen.queryByRole('button', { name: 'Light' })).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Open Tabs' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /settings/i })).toHaveAttribute('data-slot', 'button')
     expect(screen.getByRole('button', { name: /settings/i })).toHaveClass('text-muted-foreground')
   })
@@ -145,6 +150,7 @@ describe('ShellTabBarActions', () => {
     render(<SidebarShellActions layout="full" onSettingsClick={mocks.openSettingsTab} />)
 
     expect(screen.queryByRole('button', { name: 'Light' })).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Open Tabs' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /settings/i })).toHaveAttribute('data-slot', 'button')
     expect(screen.getByRole('button', { name: /settings/i })).toHaveClass('justify-start', 'text-foreground')
     expect(screen.getByRole('button', { name: /settings/i })).not.toHaveClass('text-muted-foreground')
