@@ -252,10 +252,18 @@ export const QuickPanelView: React.FC<Props> = ({ inputAdapter }) => {
   const handleClose = useCallback(
     (action?: QuickPanelCloseAction) => {
       const cleanSearchText = activeSearchQuery.trim()
+      const activeElement = document.activeElement
+      if (panelRef.current?.contains(activeElement)) {
+        if (inputAdapter) {
+          inputAdapter.focus()
+        } else if (activeElement instanceof HTMLElement) {
+          activeElement.blur()
+        }
+      }
       ctx.close(action, cleanSearchText)
       scrollTriggerRef.current = 'initial'
     },
-    [ctx, activeSearchQuery]
+    [ctx, activeSearchQuery, inputAdapter]
   )
 
   const getCurrentPanelOptions = useCallback(
@@ -954,6 +962,7 @@ export const QuickPanelView: React.FC<Props> = ({ inputAdapter }) => {
         ctx.isVisible && 'visible',
         ctx.isVisible ? 'pointer-events-auto' : 'pointer-events-none'
       )}
+      inert={!ctx.isVisible}
       data-testid="quick-panel">
       <div
         ref={bodyRef}

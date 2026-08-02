@@ -231,12 +231,16 @@ const ChatContentInner: FC<InnerProps> = ({
       {isEmptyConversation && (
         <div className="pointer-events-none absolute inset-0 z-10">
           <ConversationGreeting
-            avatar={assistant?.emoji}
             conversationId={topic.id}
             mode="chat"
             onGreetingChange={handleGreetingChange}
             title={t('chat.home.welcome_title')}
           />
+          {assistant?.name ? (
+            <p className="sr-only" role="note" aria-label={`${t('common.assistant_one')}: ${assistant.name}`}>
+              {assistant.name}
+            </p>
+          ) : null}
         </div>
       )}
       <ChatMain
