@@ -14,7 +14,7 @@ export function ConversationNavigationPane({ children, className, ...props }: HT
         className
       )}
       {...props}>
-      {/* Residual top reserve: 44px detached/mac local, 0 when AppShell owns content-top inset */}
+      {/* Residual top reserve: its shell host decides whether another titlebar reserve remains. */}
       {isMac && (
         <div
           aria-hidden="true"

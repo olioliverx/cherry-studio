@@ -20,15 +20,17 @@ const updateTab = vi.fn()
 
 async function renderSubWindowAppShell({
   init = null,
+  isMac = true,
   isPageTitledRoute = () => false,
   tabs = defaultTabs
 }: {
   init?: SubWindowInitData | null
+  isMac?: boolean
   isPageTitledRoute?: (url: string) => boolean
   tabs?: ShellTab[]
 } = {}) {
   vi.resetModules()
-  vi.doMock('@renderer/utils/platform', () => ({ isMac: false, isWin: false, isLinux: false }))
+  vi.doMock('@renderer/utils/platform', () => ({ isMac, isWin: false, isLinux: false }))
   vi.doMock('@renderer/hooks/useWindowInitData', () => ({
     useWindowInitData: () => init
   }))
@@ -50,9 +52,6 @@ async function renderSubWindowAppShell({
     getDefaultRouteTitle: (url: string) => url,
     isPageTitledRoute
   }))
-  vi.doMock('@renderer/components/chat/shell/WindowFrameContext', () => ({
-    WindowFrameProvider: ({ children }: { children: ReactNode }) => <>{children}</>
-  }))
   vi.doMock('@renderer/components/layout/SubWindowControls', () => ({
     SubWindowControls: () => <div data-testid="sub-window-controls" />
   }))
@@ -66,8 +65,13 @@ async function renderSubWindowAppShell({
   vi.doMock('../SubWindowTitleBar', () => ({
     SubWindowTitleBar: () => <header data-testid="sub-window-title-bar" />
   }))
+  const { ConversationNavigationPane } = await import('@renderer/components/chat/shell/ConversationNavigationPane')
   vi.doMock('@renderer/components/layout/TabRouter', () => ({
-    TabRouter: () => <section data-testid="tab-router" />
+    TabRouter: () => (
+      <ConversationNavigationPane>
+        <section data-testid="tab-router" />
+      </ConversationNavigationPane>
+    )
   }))
   vi.doMock('@renderer/components/MiniApp/MiniAppTabsPool', () => ({
     default: () => <div data-testid="mini-app-pool" />
@@ -79,7 +83,7 @@ async function renderSubWindowAppShell({
   }))
 
   const { SubWindowAppShell } = await import('../SubWindowAppShell')
-  render(<SubWindowAppShell />)
+  return render(<SubWindowAppShell />)
 }
 
 afterEach(() => {
@@ -98,6 +102,44 @@ describe('SubWindowAppShell', () => {
     expect(provider).toContainElement(screen.getByTestId('tab-router'))
     expect(provider).not.toContainElement(screen.getByTestId('sub-window-title-bar'))
     expect(provider).not.toContainElement(screen.getByTestId('mini-app-pool'))
+  })
+
+  it('owns one macOS titlebar reserve and clears the route-local inset across remounts', async () => {
+    const rendered = await renderSubWindowAppShell()
+    const titleBar = screen.getByTestId('sub-window-title-bar')
+    const shell = titleBar.parentElement
+    const main = titleBar.nextElementSibling
+
+    if (!(shell instanceof HTMLElement) || !(main instanceof HTMLElement)) {
+      throw new Error('Expected detached shell and content')
+    }
+
+    expect(screen.getAllByTestId('sub-window-title-bar')).toHaveLength(1)
+    expect(shell).toHaveAttribute('data-shell-local-top-inset', 'none')
+    expect(shell.style.getPropertyValue('--shell-local-top-inset')).toBe('0px')
+    expect(main.tagName).toBe('MAIN')
+    expect(main).toContainElement(document.querySelector('.conversation-navigation-pane'))
+    expect(main.querySelectorAll('[data-shell-local-top-reserve="titlebar"]')).toHaveLength(1)
+
+    rendered.unmount()
+    expect(document.querySelector('[data-shell-local-top-inset="none"]')).toBeNull()
+
+    await renderSubWindowAppShell()
+    const remountedShell = screen.getByTestId('sub-window-title-bar').parentElement
+    expect(remountedShell).toHaveAttribute('data-shell-local-top-inset', 'none')
+    expect(remountedShell?.style.getPropertyValue('--shell-local-top-inset')).toBe('0px')
+  })
+
+  it('keeps non-macOS detached content directly below the single titlebar without a local reserve', async () => {
+    await renderSubWindowAppShell({ isMac: false })
+    const titleBar = screen.getByTestId('sub-window-title-bar')
+    const shell = titleBar.parentElement
+    const main = titleBar.nextElementSibling
+
+    expect(screen.getAllByTestId('sub-window-title-bar')).toHaveLength(1)
+    expect(shell).toHaveAttribute('data-shell-local-top-inset', 'none')
+    expect(shell?.style.getPropertyValue('--shell-local-top-inset')).toBe('0px')
+    expect(main?.querySelector('[data-shell-local-top-reserve="titlebar"]')).toBeNull()
   })
 
   it('opens the detached tab from WindowManager init data', async () => {

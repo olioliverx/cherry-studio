@@ -11,8 +11,8 @@
   --shell-content-top-inset: 0px;
   /*
    * Residual top inset for chat-local reserves (topbar ::before, conversation nav spacer).
-   * Default equals the physical titlebar so detached chat windows keep a 44px reserve.
-   * AppShell zeros this when it owns --shell-content-top-inset so main-window chat is not double-padded.
+   * Default equals the physical titlebar as a safe fallback outside a known shell host.
+   * AppShell and SubWindowAppShell zero this when their shared titlebar already owns the reserve.
    */
   --shell-local-top-inset: var(--shell-titlebar-height);
   /*

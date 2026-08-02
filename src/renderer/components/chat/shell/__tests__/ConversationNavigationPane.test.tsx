@@ -53,9 +53,7 @@ describe('ConversationNavigationPane', () => {
     expect(container.querySelector('[data-shell-local-top-reserve="titlebar"]')).toBeNull()
   })
 
-  it('retains the residual titlebar reserve contract in detached window mode', () => {
-    // Detached chat windows are not under AppShell ownership; --shell-local-top-inset
-    // defaults to the physical titlebar height so the reserve stays 44px.
+  it('keeps window-frame sizing while consuming the host-owned residual inset token', () => {
     mocks.windowFrameMode = 'window'
     mocks.platformState.isMac = true
 

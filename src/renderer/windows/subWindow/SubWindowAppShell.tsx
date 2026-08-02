@@ -93,8 +93,14 @@ export const SubWindowAppShell = () => {
     // title bar stays outside every route so hosted pages can keep their normal page chrome.
     <WindowFrameProvider value={WINDOW_FRAME}>
       <div
+        data-shell-local-top-inset="none"
         className="relative flex h-screen w-screen flex-col overflow-hidden bg-background text-foreground"
-        style={{ '--window-controls-width': hasWindowControls ? '138px' : '0px' } as CSSProperties}>
+        style={
+          {
+            '--shell-local-top-inset': '0px',
+            '--window-controls-width': hasWindowControls ? '138px' : '0px'
+          } as CSSProperties
+        }>
         <SubWindowTitleBar />
         {/* Content Area - Multi MemoryRouter Architecture */}
         <main className="relative flex-1 overflow-hidden bg-background">
