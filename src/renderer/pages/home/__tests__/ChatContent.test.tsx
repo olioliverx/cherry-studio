@@ -1,4 +1,6 @@
 import type * as ToolApprovalOverridesModule from '@renderer/components/composer/useToolApprovalComposerOverrides'
+import type { ChatComposerResolvedContext } from '@renderer/components/composer/variants/ChatComposer'
+import { type Assistant, DEFAULT_ASSISTANT_SETTINGS } from '@shared/data/types/assistant'
 import type { CherryMessagePart, CherryUIMessage } from '@shared/data/types/message'
 import { mockUseInvalidateCache, mockUseMutation } from '@test-mocks/renderer/useDataApi'
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
@@ -238,6 +240,35 @@ function createUiMessage(id: string, role: CherryUIMessage['role']): CherryUIMes
     parts: role === 'assistant' ? [{ type: 'text', text: `reply-${id}` }] : [{ type: 'text', text: `prompt-${id}` }],
     metadata: { createdAt: '2026-01-01T00:00:00.000Z' }
   } as CherryUIMessage
+}
+
+function createAssistantContext(): ChatComposerResolvedContext {
+  const assistant: Assistant = {
+    id: 'assistant-1',
+    name: 'Research Assistant',
+    prompt: '',
+    emoji: '😀',
+    description: '',
+    settings: { ...DEFAULT_ASSISTANT_SETTINGS },
+    modelId: null,
+    groupId: null,
+    orderKey: 'a0',
+    mcpServerIds: [],
+    knowledgeBaseIds: [],
+    createdAt: '2026-01-01T00:00:00.000Z',
+    updatedAt: '2026-01-01T00:00:00.000Z',
+    modelName: null
+  }
+
+  return {
+    assistant,
+    isLoading: false,
+    model: undefined,
+    isModelPending: false,
+    isModelMissing: true,
+    setModel: vi.fn(),
+    updateAssistantSettings: vi.fn(async () => undefined)
+  }
 }
 
 describe('ChatContent', () => {
@@ -499,7 +530,7 @@ describe('ChatContent', () => {
   })
 
   it('keeps an empty real topic in docked composer mode', () => {
-    mockUseTopicMessages.mockReturnValue({
+    const emptyTopicMessages = {
       uiMessages: [],
       siblingsMap: {},
       isLoading: false,
@@ -508,7 +539,8 @@ describe('ChatContent', () => {
       loadOlder: vi.fn(),
       hasOlder: false,
       mutate: vi.fn().mockResolvedValue(undefined)
-    })
+    }
+    mockUseTopicMessages.mockReturnValue(emptyTopicMessages)
     mockUseChatWithHistory.mockReturnValue({
       sendMessage: vi.fn(),
       regenerate: vi.fn(),
@@ -519,13 +551,26 @@ describe('ChatContent', () => {
       activeExecutions: []
     })
 
-    render(<ChatContent topic={topic} />)
+    const view = render(<ChatContent topic={topic} assistantContext={createAssistantContext()} />)
 
     expect(screen.getByTestId('composer-dock-frame')).toHaveAttribute('data-placement', 'docked')
     expect(screen.getByTestId('composer-dock-frame')).toHaveAttribute('data-main-visible', 'true')
     expect(screen.getByTestId('composer-dock-composer')).toHaveTextContent('send')
     // Loaded-and-empty is the greeting's show condition.
     expect(screen.getByTestId('conversation-greeting')).toBeInTheDocument()
+    expect(screen.getByTestId('conversation-greeting')).not.toHaveTextContent('😀')
+    expect(screen.queryByText('😀')).not.toBeInTheDocument()
+    expect(screen.getByRole('note', { name: /Research Assistant/ })).toHaveClass('sr-only')
+
+    mockUseTopicMessages.mockReturnValue({
+      ...emptyTopicMessages,
+      uiMessages: [createUiMessage('first-user', 'user')],
+      activeNodeId: 'first-user'
+    })
+    view.rerender(<ChatContent topic={topic} assistantContext={createAssistantContext()} />)
+
+    expect(screen.queryByTestId('conversation-greeting')).not.toBeInTheDocument()
+    expect(screen.queryByRole('note', { name: /Research Assistant/ })).not.toBeInTheDocument()
   })
 
   it('sends the displayed greeting only with the first user turn', async () => {
