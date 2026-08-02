@@ -119,13 +119,12 @@ ChatWise UI characteristics:
 
 ## Roadmap Status
 
-The refactoring roadmap is implementation-complete. The remaining release gate is visual regression verification of the
-current branch tip on macOS, with particular attention to:
+The refactoring roadmap and its macOS visual regression gate are complete. The final verification covered:
 
 - the global navigation launcher and floating sidebar on every route;
-- macOS traffic lights in windowed and fullscreen modes;
+- macOS traffic lights, titlebar drag regions, keyboard focus, and dismissal behavior;
 - chat, multiline composer, Settings, and dark mode;
-- Files, Knowledge, Translate, Paintings, Notes, Code, and Agents at narrow and standard window widths.
+- Files, Knowledge, Translate, Paintings, Notes, Code, and Agents at narrow, standard, and wide window widths.
 
 No data model, persistence, IPC, route, shortcut, or command behavior is intentionally changed by this refactor.
 
