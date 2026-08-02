@@ -1591,7 +1591,7 @@ function TopicListBody(props: TopicListBodyProps) {
     <ResourceList.Body<Topic>
       listRef={listRef}
       draggable={variant === 'draggable'}
-      virtualClassName={cn('pt-0', isRightPanel ? 'pb-8' : 'pb-3')}
+      virtualClassName={cn('pt-0', isRightPanel ? 'pb-8' : 'shell-launcher-clearance')}
       errorFallback={<ResourceList.ErrorState message={t('error.boundary.default.message')} />}
       emptyFallback={
         <div className="mx-auto flex h-full w-full max-w-sm items-center justify-center break-words px-5 py-10 text-center text-muted-foreground text-xs">

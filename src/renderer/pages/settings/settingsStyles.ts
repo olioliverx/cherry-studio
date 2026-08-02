@@ -2,7 +2,7 @@ export const settingsSubmenuScrollClassName =
   'h-[calc(100vh-var(--navbar-height))] w-(--settings-width) border-border border-r-[0.5px]'
 
 export const settingsSubmenuListClassName =
-  'flex flex-col gap-0.5 px-3 pt-1 pb-[calc(0.75rem+var(--shell-launcher-bottom-inset))] [box-sizing:border-box]'
+  'shell-launcher-clearance flex flex-col gap-0.5 px-3 pt-1 [box-sizing:border-box]'
 
 export const settingsSubmenuItemClassName =
   'h-9 rounded-md border-transparent px-2.5 font-normal text-foreground text-sm hover:!bg-muted data-[active=true]:!border-transparent data-[active=true]:!bg-muted data-[active=true]:!font-medium data-[active=true]:!text-foreground [&_svg]:size-4 [&_svg]:text-muted-foreground [&_svg]:data-[active=true]:!text-foreground'

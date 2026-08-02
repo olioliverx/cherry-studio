@@ -165,9 +165,33 @@ describe('SettingsPage', () => {
     expect(navigation?.className).toMatch(/\bmin-h-0\b/)
     expect(navigationScroll.className).toMatch(/\bmin-h-0\b/)
     expect(navigationScroll.className).toMatch(/\bflex-1\b/)
-    expect(menuList.className).toContain('--shell-launcher-bottom-inset')
+    expect(menuList).toHaveClass('shell-launcher-clearance')
+    expect(menuList.className).not.toContain('--shell-launcher-bottom-inset')
     expect(content?.className).not.toContain('--shell-launcher-bottom-inset')
     expect(navigation?.className).not.toContain('--shell-launcher-bottom-inset')
+    expect(responsiveStyles).toContain('.shell-launcher-clearance')
+    expect(responsiveStyles).toContain('var(--shell-launcher-bottom-inset)')
+  })
+
+  it('keeps nested ordinary launcher clearance independent from a flush owner', () => {
+    const { container } = render(
+      <div className="shell-launcher-clearance shell-launcher-clearance-flush" data-testid="flush-owner">
+        <div className="shell-launcher-clearance" data-testid="ordinary-consumer" />
+      </div>
+    )
+    const flushOwner = screen.getByTestId('flush-owner')
+    const ordinaryConsumer = screen.getByTestId('ordinary-consumer')
+
+    expect(flushOwner.matches('.shell-launcher-clearance.shell-launcher-clearance-flush')).toBe(true)
+    expect(ordinaryConsumer.matches('.shell-launcher-clearance:not(.shell-launcher-clearance-flush)')).toBe(true)
+    expect(responsiveStyles).toMatch(
+      /\.shell-launcher-clearance\s*{\s*padding-bottom:\s*calc\(calc\(var\(--spacing\) \* 3\) \+ var\(--shell-launcher-bottom-inset\)\);\s*}/
+    )
+    expect(responsiveStyles).toMatch(
+      /\.shell-launcher-clearance\.shell-launcher-clearance-flush\s*{\s*padding-bottom:\s*var\(--shell-launcher-bottom-inset\);\s*}/
+    )
+    expect(responsiveStyles).not.toContain('--shell-launcher-clearance-base')
+    expect(container.querySelectorAll('.shell-launcher-clearance')).toHaveLength(2)
   })
 
   it('keeps the Settings header selector shape the AppShell titlebar suppress rule targets', () => {

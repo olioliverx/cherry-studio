@@ -70,7 +70,7 @@ const TranslateInputPane = ({
 
   return (
     <div
-      className="relative flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-background"
+      className="shell-launcher-clearance shell-launcher-clearance-flush relative flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-background"
       onDragEnter={handleDragEnter}
       onDragLeave={handleDragLeave}
       onDragOver={handleDragOver}

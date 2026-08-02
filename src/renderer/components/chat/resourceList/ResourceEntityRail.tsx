@@ -367,7 +367,7 @@ export function ResourceEntityRail<T extends ResourceEntityRailItem, TActionCont
           listRef={effectiveListRef}
           draggable={hasReorderHandler}
           ariaLabel={ariaLabel}
-          virtualClassName="pt-1 pb-3"
+          virtualClassName="shell-launcher-clearance pt-1"
           errorFallback={<ResourceList.ErrorState message={t('error.boundary.default.message')} />}
           emptyFallback={empty}
           renderItem={renderItem}

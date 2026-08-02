@@ -13,7 +13,7 @@ export const paintingClasses = {
   /** Pins the prompt visually to the bottom of the middle column. */
   promptDock: 'relative z-20 shrink-0 bg-background px-2 pt-2 pb-2',
   historyStrip:
-    'flex h-full w-[68px] shrink-0 flex-col gap-2 overflow-y-auto border-border-subtle border-r bg-sidebar px-2 pt-3 pb-[calc(0.75rem+var(--shell-launcher-bottom-inset))] [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden',
+    'shell-launcher-clearance flex h-full w-[68px] shrink-0 flex-col gap-2 overflow-y-auto border-border-subtle border-r bg-sidebar px-2 pt-3 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden',
   historyAddButton:
     'sticky top-0 z-10 mb-1 flex h-11 w-11 shrink-0 items-center justify-center rounded-md border border-dashed border-border-subtle bg-sidebar text-muted-foreground hover:border-border-strong hover:bg-sidebar-accent hover:text-foreground',
   historyItem:

@@ -58,7 +58,7 @@ export const CodeCliSidebar: FC<CodeCliSidebarProps> = ({
 
   return (
     <div className="flex h-full min-h-0 w-60 shrink-0 flex-col border-border-subtle border-r bg-sidebar">
-      <Scrollbar className="min-h-0 flex-1 overflow-x-hidden px-2 py-3">
+      <Scrollbar className="shell-launcher-clearance min-h-0 flex-1 overflow-x-hidden px-2 pt-3">
         {tools.length === 0 ? (
           <div className="py-8 text-center text-foreground-tertiary text-xs">{t('code.no_tools')}</div>
         ) : (
