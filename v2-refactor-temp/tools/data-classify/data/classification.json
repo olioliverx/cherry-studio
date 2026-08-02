@@ -836,7 +836,7 @@
         {
           "originalKey": "showTopics",
           "type": "boolean",
-          "defaultValue": true,
+          "defaultValue": false,
           "status": "classified",
           "category": "preferences",
           "targetKey": "topic.tab.show"
