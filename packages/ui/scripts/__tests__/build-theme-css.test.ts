@@ -84,7 +84,7 @@ describe('buildThemeContractCss', () => {
     expect(css).toContain('--radius-sm: calc(var(--radius) * 0.6);')
     expect(css).toContain('--radius-md: calc(var(--radius) * 0.8);')
     expect(css).toContain('--radius-lg: var(--radius);')
-    expect(css).toContain('--radius-4xl: calc(var(--radius) * 2.0);')
+    expect(css).toContain('--radius-4xl: calc(var(--radius) * 2);')
     expect(css).toContain('--radius-full: var(--cs-radius-round);')
     expect(css).toContain('--radius-round: var(--cs-radius-round);')
     expect(css).toContain('--font-size-body-md: var(--cs-font-size-body-md);')

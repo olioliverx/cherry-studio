@@ -86,7 +86,7 @@ const TranslateInputPane = ({
             disabled={disabled}
             spellCheck={false}
             placeholder={t('translate.input.placeholder')}
-            className="min-h-full w-full resize-none overflow-hidden bg-transparent p-4 pr-12 text-base text-foreground leading-relaxed outline-none placeholder:font-normal placeholder:text-muted-foreground"
+            className="min-h-full w-full resize-none overflow-hidden bg-transparent p-5 pr-12 text-base text-foreground leading-relaxed outline-none placeholder:font-normal placeholder:text-muted-foreground"
           />
         </Scrollbar>
         <IconButton
@@ -104,7 +104,7 @@ const TranslateInputPane = ({
           onClick={onSelectFile}
           disabled={disabled || selecting}
           aria-label={t('translate.files.upload')}
-          className="mx-3 mb-4 flex shrink-0 flex-col items-center justify-center gap-3 rounded-md border border-border-subtle border-dashed px-4 py-4 text-muted-foreground transition-colors hover:border-border-strong hover:bg-muted/30 hover:text-foreground focus-visible:border-border-strong focus-visible:bg-muted/30 focus-visible:text-foreground focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-60">
+          className="mx-4 mb-5 flex shrink-0 flex-col items-center justify-center gap-3 rounded-md border border-border-subtle border-dashed px-5 py-5 text-muted-foreground transition-colors hover:border-border-strong hover:bg-muted/30 hover:text-foreground focus-visible:border-border-strong focus-visible:bg-muted/30 focus-visible:text-foreground focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-60">
           <span className="text-sm">{t('translate.files.upload')}</span>
           <span className="flex items-center gap-6">
             {uploadIcons.map((icon) => (

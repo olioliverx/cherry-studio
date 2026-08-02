@@ -9,8 +9,8 @@ import type { FileItem } from './fileDisplay'
 import { getFormatLabel, typeBgColors, typeIconColors, typeIcons } from './fileDisplay'
 import { InlineRename } from './InlineRename'
 
-const GRID_GAP_PX = 12
-const GRID_PADDING_PX = 12
+const GRID_GAP_PX = 16
+const GRID_PADDING_PX = 16
 const GRID_MIN_CARD_WIDTH_PX = 156
 const GRID_ROW_ESTIMATE_PX = 220
 
@@ -89,7 +89,7 @@ export const FileGrid = memo(function FileGrid({
   }, [columnCount, onLayoutChange, totalSize])
 
   return (
-    <div className="relative p-3" style={{ height: totalSize + GRID_PADDING_PX * 2 }}>
+    <div className="relative p-4" style={{ height: totalSize + GRID_PADDING_PX * 2 }}>
       {rowVirtualizer.getVirtualItems().map((virtualRow) => {
         const row = rows[virtualRow.index] ?? []
         return (
@@ -97,7 +97,7 @@ export const FileGrid = memo(function FileGrid({
             key={row[0]?.id ?? virtualRow.key}
             ref={rowVirtualizer.measureElement}
             data-index={virtualRow.index}
-            className="absolute top-3 right-3 left-3 grid gap-3 pb-3"
+            className="absolute top-4 right-4 left-4 grid gap-4 pb-4"
             style={{
               gridTemplateColumns: `repeat(${columnCount}, minmax(0, 1fr))`,
               transform: `translateY(${virtualRow.start}px)`

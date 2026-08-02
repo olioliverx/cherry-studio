@@ -30,7 +30,8 @@ git rebase upstream/main
 git push --force-with-lease origin chatwise-ui
 ```
 
-Conflicts will be concentrated in the few layout/theme files we changed (see below). Feature components merge cleanly since we don't touch them.
+The table below highlights the main conflict surface. Most changes remain presentation-only, but the final app-wide pass
+also touches route-owned feature components.
 
 ### Files changed (conflict surface)
 
@@ -49,6 +50,7 @@ Conflicts will be concentrated in the few layout/theme files we changed (see bel
 | `src/renderer/components/chat/shell/ConversationTopBarPortal.tsx` | 4 | Low — added justify-center |
 | `src/renderer/pages/home/components/ChatNavbar.tsx` | 4 | Medium — centered header layout |
 | `src/renderer/pages/home/HomePage.tsx` | 4 | Low — removed rounded corners |
+| `src/renderer/pages/{files,knowledge,translate,notes,code,paintings}/` | 6 | Low — presentation classes only |
 
 ## Design Reference
 
@@ -101,17 +103,31 @@ ChatWise UI characteristics:
 - **Simplified composer**: cleaner border (border/60), subtler shadow
 - **Subtle top bar divider** (border/40)
 
-## Remaining Phases
+### Phase 5: Single-Sidebar Chat Shell ✅
+- Removed the browser-style tab bar and default icon rail without removing route or tab state
+- Unified the assistant/topic navigation and conversation surface
+- Centered the model selector and adopted the native system font on macOS
 
-### Phase 5: Message Styling
-- Adjust message bubble styling for cleaner look
-- Code block header with language label + copy button
-- Message spacing and typography
+### Phase 6: App-Wide Polish ✅
+- Applied the ChatWise shell to every route
+- Tightened global radius and shadow tokens
+- Restyled Settings with quieter dividers, compact navigation, and more deliberate spacing
+- Reduced chat message, avatar, action-row, and composer chrome
+- Flattened the assistant resource rail while preserving Add Assistant, New Chat, groups, and actions
+- Added an explicit keyboard-focusable launcher for the hidden global navigation; left-edge hover reveal remains available
+- Brought Agents, Files, Knowledge, Translate, Paintings, Notes, and Code into the same surface, divider, radius, and spacing system
 
-### Phase 6: Polish & Refinement
-- Fine-tune spacing and proportions
-- Settings page cleanup
-- Animation and transition tuning
+## Roadmap Status
+
+The refactoring roadmap is implementation-complete. The remaining release gate is visual regression verification of the
+current branch tip on macOS, with particular attention to:
+
+- the global navigation launcher and floating sidebar on every route;
+- macOS traffic lights in windowed and fullscreen modes;
+- chat, multiline composer, Settings, and dark mode;
+- Files, Knowledge, Translate, Paintings, Notes, Code, and Agents at narrow and standard window widths.
+
+No data model, persistence, IPC, route, shortcut, or command behavior is intentionally changed by this refactor.
 
 ## App Identity
 
@@ -124,6 +140,10 @@ The fork builds as a separate app to avoid conflicts with the original Cherry St
 
 ## Verification
 
-All tests pass after each phase:
-- `pnpm test:main` — 663 files, 9598 tests
-- `pnpm test:renderer` — 800 files, 8366 tests
+Required completion gates:
+
+- `pnpm lint`
+- `pnpm test`
+- `pnpm format`
+- `pnpm build:check`
+- macOS package build and route-by-route visual regression pass

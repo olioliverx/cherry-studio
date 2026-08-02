@@ -31,7 +31,7 @@ import MessageHeader from './MessageHeader'
 import MessageMenuBar from './MessageMenuBar'
 
 const USER_MESSAGE_FOOTER_ACTIONS_CLASS =
-  'absolute inset-0 flex items-center gap-2 opacity-0 transition-opacity duration-150 focus-within:opacity-100 group-hover/message:opacity-100'
+  'absolute inset-0 flex items-center gap-1.5 opacity-0 transition-opacity duration-150 focus-within:opacity-100 group-hover/message:opacity-100'
 
 interface Props {
   message: MessageListItem
@@ -218,7 +218,7 @@ const MessageItemContent: FC<Omit<Props, 'messageParts'>> = ({
   )
 
   const userFooter = showUserFooterActions ? (
-    <div className="MessageFooter relative mt-1 flex min-h-6.5 max-w-full shrink-0 items-center text-foreground-tertiary text-xs leading-none">
+    <div className="MessageFooter relative mt-1 flex min-h-6 max-w-full shrink-0 items-center text-foreground-tertiary text-xs leading-none">
       <div className={USER_MESSAGE_FOOTER_ACTIONS_CLASS}>
         <MessageMenuBar
           message={message}
@@ -240,7 +240,7 @@ const MessageItemContent: FC<Omit<Props, 'messageParts'>> = ({
   const assistantFooter = showAssistantFooterActions ? (
     <div
       className={cn(
-        'MessageFooter mt-1 flex min-h-6.5 shrink-0 items-center justify-between gap-1.5 text-xs leading-none',
+        'MessageFooter mt-1 flex min-h-6 shrink-0 items-center justify-between gap-1 text-xs leading-none',
         assistantFooterVisibilityClass
       )}>
       <HorizontalScrollContainer
@@ -375,7 +375,7 @@ const UserBubbleMessage = ({
         <MessageAvatar avatar={avatar} className="mt-1.5" onClick={canOpenUserProfile ? openUserProfile : undefined} />
       </div>
       {!isEditing && (
-        <div className="MessageFooter relative mt-1 mr-[30px] flex min-h-6.5 w-[calc(100%-30px)] max-w-full items-center justify-end text-foreground-tertiary text-xs leading-none">
+        <div className="MessageFooter relative mt-1 mr-7 flex min-h-6 w-[calc(100%-28px)] max-w-full items-center justify-end text-foreground-tertiary text-xs leading-none">
           <div className={cn(USER_MESSAGE_FOOTER_ACTIONS_CLASS, 'justify-end')}>
             <span className="shrink-0">{dayjs(message.updatedAt ?? message.createdAt).format('MM/DD HH:mm')}</span>
             <MessageMenuBar

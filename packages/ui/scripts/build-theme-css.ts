@@ -39,7 +39,7 @@ const RADIUS_LINES = [
   '--radius-xl: calc(var(--radius) * 1.25);',
   '--radius-2xl: calc(var(--radius) * 1.5);',
   '--radius-3xl: calc(var(--radius) * 1.75);',
-  '--radius-4xl: calc(var(--radius) * 2.0);',
+  '--radius-4xl: calc(var(--radius) * 2);',
   '--radius-full: var(--cs-radius-round);',
   '--radius-round: var(--cs-radius-round);'
 ]

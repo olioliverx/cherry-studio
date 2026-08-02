@@ -21,7 +21,7 @@ const DetailHeader = ({ base, onOpenRagConfig, onOpenRecallTest, onRebuild }: De
   return (
     <PageHeader
       title={base.name}
-      className="relative mb-0 h-9 pb-1 after:pointer-events-none after:absolute after:right-3 after:bottom-0 after:left-3 after:border-border after:border-b after:content-['']"
+      className="relative mb-0 h-10 pb-1 after:pointer-events-none after:absolute after:right-4 after:bottom-0 after:left-4 after:border-border-subtle after:border-b after:content-['']"
       action={
         base.status === 'failed' ? (
           <Button

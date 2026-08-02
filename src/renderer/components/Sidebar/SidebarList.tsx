@@ -14,6 +14,7 @@ export interface SidebarListProps {
   active: SidebarActiveState
   onReorder?: (event: { oldIndex: number; newIndex: number }) => void
   onContextMenuOpenChange?: (open: boolean) => void
+  onEntryOpen?: () => void
 }
 
 /**
@@ -51,7 +52,7 @@ function EntryContextMenu({
   )
 }
 
-function IconList({ entries, active, onReorder, onContextMenuOpenChange }: ListProps) {
+function IconList({ entries, active, onReorder, onContextMenuOpenChange, onEntryOpen }: ListProps) {
   return (
     <SidebarSortableList
       items={entries}
@@ -67,7 +68,10 @@ function IconList({ entries, active, onReorder, onContextMenuOpenChange }: ListP
               <button
                 type="button"
                 aria-label={entry.label}
-                onClick={guardClick(entry.key, entry.onOpen)}
+                onClick={guardClick(entry.key, () => {
+                  entry.onOpen()
+                  onEntryOpen?.()
+                })}
                 className={`relative flex h-9 w-9 items-center justify-center rounded-lg transition-all duration-150 ${
                   isActive
                     ? 'bg-[var(--sidebar-active-bg)] text-foreground'
@@ -84,7 +88,7 @@ function IconList({ entries, active, onReorder, onContextMenuOpenChange }: ListP
   )
 }
 
-function FullList({ entries, active, onReorder, onContextMenuOpenChange }: ListProps) {
+function FullList({ entries, active, onReorder, onContextMenuOpenChange, onEntryOpen }: ListProps) {
   return (
     <SidebarSortableList
       items={entries}
@@ -102,7 +106,10 @@ function FullList({ entries, active, onReorder, onContextMenuOpenChange }: ListP
                 icon={entry.renderIcon(16, 'md')}
                 label={entry.label}
                 active={isActive}
-                onClick={guardClick(entry.key, entry.onOpen)}
+                onClick={guardClick(entry.key, () => {
+                  entry.onOpen()
+                  onEntryOpen?.()
+                })}
                 className="rounded-lg data-[active=true]:bg-[var(--sidebar-active-bg)]"
               />
             </EntryContextMenu>
