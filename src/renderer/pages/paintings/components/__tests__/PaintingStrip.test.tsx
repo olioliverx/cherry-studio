@@ -59,4 +59,25 @@ describe('PaintingStrip', () => {
 
     expect(screen.getByTestId('painting-skeleton-surface')).toBeInTheDocument()
   })
+
+  it('keeps the 68px strip and New Image action while applying launcher bottom inset only on the scroll strip', () => {
+    const { container } = render(
+      <PaintingStrip
+        items={[]}
+        hasMore={false}
+        loadMore={vi.fn()}
+        onDeletePainting={vi.fn()}
+        onSelectPainting={vi.fn()}
+        onAddPainting={vi.fn()}
+      />
+    )
+
+    const strip = container.querySelector('.w-\\[68px\\]') ?? container.firstElementChild
+    expect(strip).toBeTruthy()
+    expect(strip?.className).toContain('w-[68px]')
+    expect(strip?.className).toContain('--shell-launcher-bottom-inset')
+    // No local titlebar pad — AppShell owns content-top inset.
+    expect(strip?.className).not.toMatch(/pt-\[var\(--shell-titlebar/)
+    expect(screen.getByRole('button', { name: 'paintings.button.new.image' })).toBeInTheDocument()
+  })
 })

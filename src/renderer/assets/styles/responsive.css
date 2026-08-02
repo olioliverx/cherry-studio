@@ -2,6 +2,25 @@
 :root {
   --app-top-chrome-height: 44px;
   --navbar-height: var(--app-top-chrome-height);
+  /* Physical macOS titlebar / traffic-light band. Do not repurpose --navbar-height. */
+  --shell-titlebar-height: 44px;
+  /*
+   * AppShell publishes the effective content-top inset (macOS non-fullscreen only).
+   * Defaults to 0 so detached windows and non-AppShell hosts are unaffected.
+   */
+  --shell-content-top-inset: 0px;
+  /*
+   * Residual top inset for chat-local reserves (topbar ::before, conversation nav spacer).
+   * Default equals the physical titlebar so detached chat windows keep a 44px reserve.
+   * AppShell zeros this when it owns --shell-content-top-inset so main-window chat is not double-padded.
+   */
+  --shell-local-top-inset: var(--shell-titlebar-height);
+  /*
+   * Bottom inset for the hidden-layout global launcher. Published by app/Sidebar when
+   * the global rail is hidden; 0 for icon/full layouts. Consumed only by route-local
+   * scroll content that can collide with the launcher (Settings nav, Paintings strip).
+   */
+  --shell-launcher-bottom-inset: 0px;
   --sidebar-width: 200px;
   --assistants-width: 275px;
   --topic-list-width: 275px;
@@ -22,24 +41,30 @@
    The app sidebar defaults to hidden (hover left edge to reveal) and the
    browser-style tab bar is not rendered. The conversation shell and
    navigation pane fill the full window height (no tab-bar offset). The
-   centered top bar gets macOS traffic-light padding so its controls sit
-   below the window controls. Full-width content — no Cherry Studio 12px
-   right inset.                                                           */
+   centered top bar uses the residual local top inset so it sits below the
+   window controls only when AppShell is not already owning that inset.
+   Full-width content — no Cherry Studio 12px right inset.                 */
 [data-shell-variant='chatwise'] [data-ui='chat.view'],
 [data-shell-variant='chatwise'] .conversation-navigation-pane,
 [data-shell-variant='chatwise'] [data-chat-message-only] {
   height: 100%;
 }
 
-/* Push the centered top bar below the macOS traffic-light zone. */
+/* Residual chat top-bar reserve — 0 under AppShell ownership, 44px detached. */
 [data-shell-variant='chatwise'] [data-chat-topbar-wrapper]::before {
   content: '';
   display: block;
-  height: var(--navbar-height);
+  height: var(--shell-local-top-inset);
   -webkit-app-region: drag;
 }
 
 /* Full-width content — no Cherry Studio 12px right inset. */
 [data-shell-variant='chatwise'] [data-home-content-container] {
   max-width: 100vw;
+}
+
+/* Settings header: drop the default mt-3 only when AppShell already owns the
+   titlebar content-top inset. Non-mac / fullscreen keep PageHeader mt-3. */
+main[data-shell-content-top-inset='titlebar'] [data-ui='settings.navigation'] > header {
+  margin-top: 0;
 }

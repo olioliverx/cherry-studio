@@ -1,4 +1,4 @@
-import { Button, Tooltip } from '@cherrystudio/ui'
+import { Button, Dialog, DialogContent, DialogTitle, DialogTrigger, Tooltip } from '@cherrystudio/ui'
 import { usePersistCache } from '@data/hooks/useCache'
 import { usePreference } from '@data/hooks/usePreference'
 import { arrayMove } from '@dnd-kit/sortable'
@@ -18,7 +18,7 @@ import {
 import { clearTabInstanceMetadata } from '@renderer/utils/tabInstanceMetadata'
 import { PanelLeft } from 'lucide-react'
 import type { Ref } from 'react'
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { SidebarShellActions } from '../layout/ShellTabBarActions'
@@ -43,7 +43,14 @@ function getMiniAppIdFromUrl(url: string | undefined): string | undefined {
   return appId || undefined
 }
 
-export default function Sidebar({ ref }: { ref?: Ref<HTMLDivElement | null> }) {
+export type AppSidebarProps = {
+  ref?: Ref<HTMLDivElement | null>
+  /** Controlled open state for the hidden-layout navigation drawer (owned by AppShell). */
+  drawerOpen?: boolean
+  onDrawerOpenChange?: (open: boolean) => void
+}
+
+export default function Sidebar({ ref, drawerOpen = false, onDrawerOpenChange }: AppSidebarProps) {
   const { t } = useTranslation()
   const [userName] = usePreference('app.user.name')
   const { favorites, setAppPinned, removeMiniApp, reorderFavorites } = useSidebarFavorites()
@@ -57,10 +64,21 @@ export default function Sidebar({ ref }: { ref?: Ref<HTMLDivElement | null> }) {
   const [sidebarWidth, setSidebarWidth] = usePersistCache('ui.sidebar.width')
   const [previewSidebarWidth, setPreviewSidebarWidth] = useState<number | null>(null)
   const activeSidebarWidth = previewSidebarWidth ?? sidebarWidth
+  const layout = getSidebarLayout(activeSidebarWidth)
 
   useLayoutEffect(() => {
     document.documentElement.style.setProperty('--sidebar-width', `${getSidebarDisplayWidth(activeSidebarWidth)}px`)
   }, [activeSidebarWidth])
+
+  // Hidden layout exposes the bottom-left launcher; publish a bottom inset so
+  // route-local scroll content can clear it. Icon/full layouts publish 0.
+  // Own effect + cleanup so unmount does not leave a stale inset on :root.
+  useLayoutEffect(() => {
+    document.documentElement.style.setProperty('--shell-launcher-bottom-inset', layout === 'hidden' ? '48px' : '0px')
+    return () => {
+      document.documentElement.style.removeProperty('--shell-launcher-bottom-inset')
+    }
+  }, [layout])
 
   // Migration, not dead code: the resize path only persists normalized widths,
   // but older builds (three-state layout, default 65) persisted intermediate
@@ -76,6 +94,13 @@ export default function Sidebar({ ref }: { ref?: Ref<HTMLDivElement | null> }) {
       setSidebarWidth(normalizedWidth)
     }
   }, [previewSidebarWidth, setSidebarWidth, sidebarWidth])
+
+  // Close the drawer if the user expands the rail out of hidden layout while open.
+  useEffect(() => {
+    if (layout !== 'hidden' && drawerOpen) {
+      onDrawerOpenChange?.(false)
+    }
+  }, [drawerOpen, layout, onDrawerOpenChange])
 
   // User avatar
   const avatar = useAvatar()
@@ -100,39 +125,9 @@ export default function Sidebar({ ref }: { ref?: Ref<HTMLDivElement | null> }) {
     [sidebarUser]
   )
 
-  // Floating sidebar (hover reveal when hidden)
-  const [hoverVisible, setHoverVisible] = useState(false)
-  const [openedFromLauncher, setOpenedFromLauncher] = useState(false)
-  const launcherRef = useRef<HTMLButtonElement>(null)
-  const floatingPanelRef = useRef<HTMLDivElement>(null)
-  const restoreLauncherFocusRef = useRef(false)
-  const layout = getSidebarLayout(activeSidebarWidth)
-
-  const handleLauncherOpen = useCallback(() => {
-    setOpenedFromLauncher(true)
-    setHoverVisible(true)
-  }, [])
-
-  const handleFloatingDismiss = useCallback(() => {
-    restoreLauncherFocusRef.current = openedFromLauncher
-    setOpenedFromLauncher(false)
-    setHoverVisible(false)
-  }, [openedFromLauncher])
-
-  useEffect(() => {
-    if (hoverVisible && openedFromLauncher) {
-      const firstNavigationItem = floatingPanelRef.current?.querySelector<HTMLElement>(
-        '[data-ui="sidebar.navigation"] button:not([disabled])'
-      )
-      ;(firstNavigationItem ?? floatingPanelRef.current)?.focus()
-      return
-    }
-
-    if (!hoverVisible && restoreLauncherFocusRef.current) {
-      restoreLauncherFocusRef.current = false
-      launcherRef.current?.focus()
-    }
-  }, [hoverVisible, openedFromLauncher])
+  const closeDrawer = useCallback(() => {
+    onDrawerOpenChange?.(false)
+  }, [onDrawerOpenChange])
 
   // Menu items
   const pathname = activeTab?.url || '/'
@@ -187,7 +182,9 @@ export default function Sidebar({ ref }: { ref?: Ref<HTMLDivElement | null> }) {
   )
   const handleOpenSettingsTab = useCallback(() => {
     openSettingsTab('/settings/provider')
-  }, [])
+    // Footer settings is a navigation action; close the modal drawer after accept.
+    closeDrawer()
+  }, [closeDrawer])
 
   const handleOpenMiniAppTab = useCallback(
     (appId: string) => {
@@ -284,46 +281,56 @@ export default function Sidebar({ ref }: { ref?: Ref<HTMLDivElement | null> }) {
     onEntriesReorder: handleReorder
   }
 
+  const drawerTitle = t('common.open_sidebar')
+  const isHiddenLayout = layout === 'hidden'
+
   return (
     <div ref={ref} id="app-sidebar" data-ui="app.sidebar" className="relative h-full [-webkit-app-region:no-drag]">
       <UISidebar
         width={activeSidebarWidth}
         setWidth={setSidebarWidth}
-        onHoverChange={(visible) => {
-          setHoverVisible(visible)
-          if (!visible) setOpenedFromLauncher(false)
-        }}
         onResizePreview={setPreviewSidebarWidth}
         {...sidebarProps}
       />
-      {!hoverVisible && layout === 'hidden' && (
-        <Tooltip
-          content={t('common.open_sidebar')}
-          placement="right"
-          delay={400}
-          classNames={{ placeholder: 'absolute bottom-3 left-3 z-60' }}>
-          <Button
-            ref={launcherRef}
-            type="button"
-            variant="ghost"
-            size="icon"
-            aria-label={t('common.open_sidebar')}
-            onClick={handleLauncherOpen}
-            className="size-8 rounded-lg border border-border/60 bg-background/80 text-muted-foreground shadow-sm backdrop-blur-md [-webkit-app-region:no-drag] hover:bg-accent hover:text-foreground">
-            <PanelLeft size={16} strokeWidth={1.7} />
-          </Button>
-        </Tooltip>
-      )}
-      {hoverVisible && layout === 'hidden' && (
-        <UISidebar
-          width={activeSidebarWidth}
-          setWidth={setSidebarWidth}
-          isFloating
-          floatingPanelRef={floatingPanelRef}
-          onEntryOpen={handleFloatingDismiss}
-          onDismiss={handleFloatingDismiss}
-          {...sidebarProps}
-        />
+      {isHiddenLayout && (
+        <Dialog open={drawerOpen} onOpenChange={onDrawerOpenChange}>
+          {/* Keep Trigger mounted through close so Radix restores focus to the launcher. */}
+          <Tooltip
+            content={drawerTitle}
+            placement="right"
+            delay={400}
+            classNames={{ placeholder: 'absolute bottom-3 left-3 z-60' }}>
+            <DialogTrigger asChild>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                aria-label={drawerTitle}
+                className="size-8 rounded-lg border border-border/60 bg-background/80 text-muted-foreground shadow-sm backdrop-blur-md [-webkit-app-region:no-drag] hover:bg-accent hover:text-foreground">
+                <PanelLeft size={16} strokeWidth={1.7} />
+              </Button>
+            </DialogTrigger>
+          </Tooltip>
+          <DialogContent
+            aria-describedby={undefined}
+            aria-modal={true}
+            showCloseButton={false}
+            motion="fade-scale"
+            overlayClassName="bg-black/20"
+            // Inline top beats DialogContent's default top-[50%] (tailwind-merge can keep both
+            // utility classes; style always wins for the left-edge drawer geometry).
+            style={{ top: 'var(--shell-content-top-inset)' }}
+            className="data-[state=closed]:slide-out-to-left-2 data-[state=open]:slide-in-from-left-2 fixed right-auto bottom-0 left-0 z-[80] flex h-auto max-h-none w-43.5 max-w-none translate-x-0 translate-y-0 flex-col gap-0 overflow-hidden rounded-none rounded-r-sm rounded-br-2xl border-0 bg-transparent p-0 shadow-none sm:max-w-none">
+            <DialogTitle className="sr-only">{drawerTitle}</DialogTitle>
+            <UISidebar
+              width={activeSidebarWidth}
+              setWidth={setSidebarWidth}
+              isFloating
+              onEntryOpen={closeDrawer}
+              {...sidebarProps}
+            />
+          </DialogContent>
+        </Dialog>
       )}
     </div>
   )

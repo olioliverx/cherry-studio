@@ -17,7 +17,11 @@ vi.mock('@cherrystudio/ui', () => ({
       {label}
     </button>
   ),
-  MenuList: ({ children }: { children: ReactNode }) => <div>{children}</div>,
+  MenuList: ({ children, className }: { children: ReactNode; className?: string }) => (
+    <div data-testid="settings-menu-list" className={className}>
+      {children}
+    </div>
+  ),
   PageHeader: ({ className, title }: { className?: string; title: string }) => (
     <header className={className}>{title}</header>
   )
@@ -128,5 +132,38 @@ describe('SettingsPage', () => {
 
     expect(menuItems.slice(efficiencyStart, efficiencyStart + efficiencyItems.length)).toEqual(efficiencyItems)
     expect(efficiencyItems.at(-1)?.nextElementSibling).toHaveAttribute('data-testid', 'menu-divider')
+  })
+
+  it('keeps default PageHeader mt-3 and launcher inset only on the navigation menu list', () => {
+    const { container } = render(<SettingsPage />)
+
+    const navigation = container.querySelector('[data-ui="settings.navigation"]')
+    const content = container.querySelector('[data-ui="settings.content"]')
+    const pageHeader = navigation?.querySelector('header')
+    const menuList = screen.getByTestId('settings-menu-list')
+
+    expect(navigation).toBeTruthy()
+    expect(content).toBeTruthy()
+    expect(pageHeader).toBeTruthy()
+    // Default spacing for Windows/Linux and mac fullscreen; AppShell titlebar
+    // ownership suppresses mt-3 via responsive.css descendant rule.
+    expect(pageHeader?.className).toMatch(/\bmt-3\b/)
+    expect(menuList.className).toContain('--shell-launcher-bottom-inset')
+    expect(content?.className).not.toContain('--shell-launcher-bottom-inset')
+    expect(navigation?.className).not.toContain('--shell-launcher-bottom-inset')
+  })
+
+  it('keeps the Settings header selector shape the AppShell titlebar suppress rule targets', () => {
+    // responsive.css:
+    // main[data-shell-content-top-inset='titlebar'] [data-ui='settings.navigation'] > header { margin-top: 0 }
+    // Settings owns default mt-3; AppShell owns the attribute that activates the suppress rule.
+    const { container } = render(<SettingsPage />)
+    const navigation = container.querySelector('[data-ui="settings.navigation"]')
+    const pageHeader = navigation?.querySelector(':scope > header')
+
+    expect(pageHeader).toBeTruthy()
+    expect(pageHeader?.className).toMatch(/\bmt-3\b/)
+    // Direct-child header is required by the descendant rule's `> header` selector.
+    expect(navigation?.firstElementChild).toBe(pageHeader)
   })
 })
