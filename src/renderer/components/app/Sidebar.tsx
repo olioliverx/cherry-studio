@@ -276,7 +276,7 @@ export default function Sidebar({ ref, drawerOpen = false, onDrawerOpenChange }:
     title: sidebarUser.name,
     logo: sidebarLogo,
     actions: (footerLayout: SidebarVisibleLayout) => (
-      <SidebarShellActions layout={footerLayout} onSettingsClick={handleOpenSettingsTab} />
+      <SidebarShellActions layout={footerLayout} onSettingsClick={handleOpenSettingsTab} onTabSelect={closeDrawer} />
     ),
     onEntriesReorder: handleReorder
   }
