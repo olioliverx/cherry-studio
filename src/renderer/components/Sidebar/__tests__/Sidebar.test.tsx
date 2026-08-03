@@ -71,21 +71,13 @@ vi.mock('@renderer/hooks/useMacTransparentWindow', () => ({
 vi.mock('@renderer/components/command', () => ({
   CommandContextMenu: ({
     children,
-    extraItems,
-    onOpenChange
+    extraItems
   }: {
     children: ReactNode
     extraItems: ReadonlyArray<{ id: string; label: string; enabled?: boolean; onSelect?: () => void }>
-    onOpenChange?: (open: boolean) => void
   }) => (
     <div data-testid="command-context-menu">
       {children}
-      {onOpenChange && (
-        <>
-          <button type="button" data-testid="context-menu-open" onClick={() => onOpenChange(true)} />
-          <button type="button" data-testid="context-menu-close" onClick={() => onOpenChange(false)} />
-        </>
-      )}
       {extraItems.map((item) => (
         <button
           key={item.id}
@@ -157,14 +149,12 @@ afterEach(() => {
 function dragResizeFrom(width: number, moves: number | number[]) {
   const setWidth = vi.fn()
   const onResizePreview = vi.fn()
-  const onHoverChange = vi.fn()
   const { container, unmount } = render(
     <Sidebar
       width={width}
       setWidth={setWidth}
       active={{ activeItem: 'chat' }}
       entries={entries}
-      onHoverChange={onHoverChange}
       onResizePreview={onResizePreview}
     />
   )
@@ -176,7 +166,7 @@ function dragResizeFrom(width: number, moves: number | number[]) {
   }
   fireEvent.mouseUp(document)
 
-  return { setWidth, onResizePreview, onHoverChange, unmount }
+  return { setWidth, onResizePreview, unmount }
 }
 
 describe('Sidebar resize handle', () => {
@@ -294,12 +284,8 @@ describe('Sidebar resize handle', () => {
   })
 
   it('restores a hidden sidebar by dragging wider from the hot zone', () => {
-    const { setWidth, onResizePreview, onHoverChange } = dragResizeFrom(
-      SIDEBAR_HIDDEN_THRESHOLD - 10,
-      INTERMEDIATE_WIDTH
-    )
+    const { setWidth, onResizePreview } = dragResizeFrom(SIDEBAR_HIDDEN_THRESHOLD - 10, INTERMEDIATE_WIDTH)
 
-    expect(onHoverChange).toHaveBeenCalledWith(false)
     expect(onResizePreview).toHaveBeenNthCalledWith(1, INTERMEDIATE_WIDTH)
     expect(setWidth).toHaveBeenCalledTimes(1)
     expect(setWidth).toHaveBeenLastCalledWith(SIDEBAR_FULL_THRESHOLD)
@@ -336,43 +322,68 @@ describe('Sidebar resize handle', () => {
     expect(onRemove).toHaveBeenCalledTimes(1)
   })
 
-  it('keeps the floating sidebar open while a context menu is open', () => {
-    vi.useFakeTimers()
-    const onDismiss = vi.fn()
+  it('keeps floating panel context menus operable without owning modal dismiss', () => {
+    const onEntryOpen = vi.fn()
+    const onRemove = vi.fn()
 
-    try {
-      const { container } = render(
-        <Sidebar
-          width={SIDEBAR_FULL_THRESHOLD}
-          setWidth={vi.fn()}
-          active={{ activeItem: 'chat' }}
-          entries={[
-            appEntry({
-              ...items[0],
-              contextMenuItems: [{ type: 'item', id: 'remove-chat', label: 'Remove from Sidebar', onSelect: vi.fn() }]
-            })
-          ]}
-          isFloating
-          onDismiss={onDismiss}
-        />
-      )
+    render(
+      <Sidebar
+        width={SIDEBAR_FULL_THRESHOLD}
+        setWidth={vi.fn()}
+        active={{ activeItem: 'chat' }}
+        entries={[
+          appEntry({
+            ...items[0],
+            contextMenuItems: [{ type: 'item', id: 'remove-chat', label: 'Remove from Sidebar', onSelect: onRemove }]
+          })
+        ]}
+        isFloating
+        onEntryOpen={onEntryOpen}
+      />
+    )
 
-      const panel = container.querySelector('.slide-in-from-left-2') as HTMLElement
+    // Context menu actions still fire inside the panel presentation.
+    fireEvent.click(screen.getByTestId('context-menu-remove-chat'))
 
-      fireEvent.mouseEnter(panel)
-      fireEvent.click(screen.getByTestId('context-menu-open'))
-      fireEvent.mouseLeave(panel)
-      vi.advanceTimersByTime(350)
+    expect(onRemove).toHaveBeenCalledTimes(1)
+    expect(screen.getByTestId('floating-sidebar')).toBeInTheDocument()
+    // Panel no longer auto-dismisses; Dialog host owns outside/Escape close.
+    expect(onEntryOpen).not.toHaveBeenCalled()
+  })
 
-      expect(onDismiss).not.toHaveBeenCalled()
+  it('notifies the host after opening a floating navigation entry', () => {
+    const onEntryOpen = vi.fn()
+    render(
+      <Sidebar
+        width={SIDEBAR_HIDDEN_THRESHOLD - 10}
+        setWidth={vi.fn()}
+        active={{ activeItem: 'chat' }}
+        entries={entries}
+        isFloating
+        onEntryOpen={onEntryOpen}
+      />
+    )
 
-      fireEvent.click(screen.getByTestId('context-menu-close'))
-      vi.advanceTimersByTime(350)
+    fireEvent.click(screen.getByRole('button', { name: 'Chat' }))
 
-      expect(onDismiss).toHaveBeenCalledTimes(1)
-    } finally {
-      vi.useRealTimers()
-    }
+    expect(onEntryOpen).toHaveBeenCalledTimes(1)
+  })
+
+  it('does not open navigation from the hidden hot-zone hover path', () => {
+    const { container } = render(
+      <Sidebar
+        width={SIDEBAR_HIDDEN_THRESHOLD - 10}
+        setWidth={vi.fn()}
+        active={{ activeItem: 'chat' }}
+        entries={entries}
+      />
+    )
+
+    const hotZone = container.querySelector('.absolute.inset-y-0.left-0') as HTMLElement
+    fireEvent.mouseEnter(hotZone)
+    fireEvent.mouseLeave(hotZone)
+
+    expect(screen.queryByTestId('floating-sidebar')).not.toBeInTheDocument()
   })
 
   it('renders apps and direct mini app icons together in one full docked list', () => {
@@ -540,7 +551,7 @@ describe('Sidebar resize handle', () => {
   })
 
   it('uses a solid sidebar background for the floating hidden-state panel', () => {
-    const { container } = render(
+    render(
       <Sidebar
         width={SIDEBAR_HIDDEN_THRESHOLD - 10}
         setWidth={vi.fn()}
@@ -550,9 +561,11 @@ describe('Sidebar resize handle', () => {
       />
     )
 
-    const panel = container.querySelector('.slide-in-from-left-2')
+    const panel = screen.getByTestId('floating-sidebar')
 
-    expect(panel).toHaveClass('bg-sidebar')
+    expect(panel).toHaveClass('bg-sidebar', 'w-43.5')
     expect(panel).not.toHaveClass('bg-sidebar/70')
+    // Panel-only: no full-viewport transparent overlay wrapper.
+    expect(panel.parentElement?.className ?? '').not.toContain('fixed inset-0')
   })
 })

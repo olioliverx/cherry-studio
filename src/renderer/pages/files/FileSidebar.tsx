@@ -63,10 +63,10 @@ export function FileSidebar({
   }
 
   return (
-    <aside className="flex w-(--settings-width) min-w-(--settings-width) shrink-0 select-none flex-col border-border border-r-[0.5px]">
+    <aside className="flex w-(--settings-width) min-w-(--settings-width) shrink-0 select-none flex-col border-border-subtle border-r bg-sidebar text-sidebar-foreground">
       <PageHeader title={t('files.title')} />
       <Scrollbar className="min-h-0 flex-1">
-        <MenuList className="gap-0.5 px-2.5 pb-2.5">
+        <MenuList className="shell-launcher-clearance gap-1 px-2.5">
           <div className="px-2.5 pb-0.5 text-muted-foreground text-xs">{t('files.type')}</div>
           {TYPE_ENTRIES.map(renderEntry)}
           <MenuDivider className="my-1 bg-transparent" />

@@ -1978,7 +1978,7 @@ function SessionListBody({
     <ResourceList.Body<SessionListItem>
       listRef={listRef}
       draggable={isDraggable}
-      virtualClassName={cn('pt-0', isRightPanel ? 'pb-8' : 'pb-3')}
+      virtualClassName={cn('pt-0', isRightPanel ? 'pb-8' : 'shell-launcher-clearance')}
       errorFallback={
         <ResourceList.ErrorState>
           <div className="flex flex-col gap-2">

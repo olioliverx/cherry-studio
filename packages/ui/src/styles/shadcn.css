@@ -49,8 +49,8 @@
   --sidebar-border: var(--cs-sidebar-border);
   --sidebar-ring: var(--cs-sidebar-ring);
 
-  /* Shadcn radius input */
-  --radius: var(--cs-radius-lg);
+  /* Shadcn radius input — ChatWise-style: tighter 8px base */
+  --radius: var(--cs-radius-md);
 }
 
 .dark {

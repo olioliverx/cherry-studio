@@ -65,10 +65,7 @@ function Frame({ className, ref, ...props }: FrameProps) {
     <div
       ref={ref}
       data-resource-list-variant={meta.variant}
-      className={cn(
-        'flex min-h-0 flex-1 flex-col overflow-hidden border-border border-r-[0.5px] p-1.5 text-sidebar-foreground',
-        className
-      )}
+      className={cn('flex min-h-0 flex-1 flex-col overflow-hidden p-1 text-sidebar-foreground', className)}
       {...props}
     />
   )
@@ -156,12 +153,12 @@ type HeaderItemProps = Omit<ComponentProps<typeof Button>, 'children' | 'command
 
 function HeaderItem({ actions, className, command, icon, label, ref, variant = 'ghost', ...props }: HeaderItemProps) {
   return (
-    <div className="flex min-h-8 items-center gap-1">
+    <div className="flex min-h-8 items-center gap-1 px-0.5">
       <Button
         ref={ref}
         variant={variant}
         className={cn(
-          'group min-h-8 min-w-0 justify-start gap-1.5 rounded-lg py-1 text-sm shadow-none outline-none transition-all duration-150 hover:bg-accent/60 focus-visible:bg-accent/60 [&_svg]:size-4 [&_svg]:shrink-0',
+          'group min-h-8 min-w-0 justify-start gap-1.5 rounded-md py-1 text-sm shadow-none outline-none transition-colors duration-150 hover:bg-accent/50 focus-visible:bg-accent/50 [&_svg]:size-4 [&_svg]:shrink-0',
           icon ? 'px-1.5' : 'px-2.5',
           command ? 'w-full shrink' : 'flex-1',
           className
@@ -393,7 +390,7 @@ function Item<T extends ResourceListItemBase>({
       data-dragging={rowState.dragging || undefined}
       tabIndex={tabIndex ?? -1}
       className={cn(
-        'group relative flex w-full cursor-pointer items-center gap-1.5 px-2.5 text-[13px] text-foreground outline-none transition-all duration-150 has-[[data-resource-list-leading-slot=true]]:px-1.5',
+        'group relative flex w-full cursor-pointer items-center gap-1.5 px-2.5 text-[13px] text-foreground outline-none transition-colors duration-150 has-[[data-resource-list-leading-slot=true]]:px-1.5',
         RESOURCE_LIST_VISUAL_ROW_CLASS,
         RESOURCE_LIST_INTERACTIVE_ROW_CLASS,
         rowState.active && !rowState.selected && 'bg-sidebar-accent text-sidebar-foreground',

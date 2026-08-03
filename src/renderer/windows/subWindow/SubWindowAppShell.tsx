@@ -3,10 +3,11 @@ import { TabRouter } from '@renderer/components/layout/TabRouter'
 import { TITLE_BAR_HEIGHT_CLASS } from '@renderer/components/layout/titleBar'
 import MiniAppTabsPool from '@renderer/components/MiniApp/MiniAppTabsPool'
 import { ResourceViewSourceProvider } from '@renderer/components/ResourceViewSourceProvider'
-import { useHasWindowControls, WindowControls } from '@renderer/components/WindowControls'
+import { WindowControls } from '@renderer/components/WindowControls'
 import { useTabs } from '@renderer/hooks/tab'
 import type { WindowFrame } from '@renderer/hooks/useWindowFrame'
 import { useWindowInitData } from '@renderer/hooks/useWindowInitData'
+import { isLinux, isWin } from '@renderer/utils/platform'
 import { getDefaultRouteTitle, isPageTitledRoute } from '@renderer/utils/routeTitle'
 import { resolveSidebarAppTabEntryUrl } from '@renderer/utils/sidebar'
 import { cn } from '@renderer/utils/style'
@@ -86,15 +87,21 @@ export const SubWindowAppShell = () => {
   // ourselves in the top-right corner and publish their width as --window-controls-width so
   // the standalone title bar can reserve that corner. macOS keeps its native traffic lights,
   // so there are no controls and the var stays 0.
-  const hasWindowControls = useHasWindowControls()
+  const hasWindowControls = isWin || isLinux
 
   return (
     // The window frame keeps detached-page behavior scoped to this window. The standalone
     // title bar stays outside every route so hosted pages can keep their normal page chrome.
     <WindowFrameProvider value={WINDOW_FRAME}>
       <div
+        data-shell-local-top-inset="none"
         className="relative flex h-screen w-screen flex-col overflow-hidden bg-background text-foreground"
-        style={{ '--window-controls-width': hasWindowControls ? '138px' : '0px' } as CSSProperties}>
+        style={
+          {
+            '--shell-local-top-inset': '0px',
+            '--window-controls-width': hasWindowControls ? '138px' : '0px'
+          } as CSSProperties
+        }>
         <SubWindowTitleBar />
         {/* Content Area - Multi MemoryRouter Architecture */}
         <main className="relative flex-1 overflow-hidden bg-background">
@@ -132,7 +139,7 @@ export const SubWindowAppShell = () => {
         {hasWindowControls && (
           <div
             className={cn('absolute top-0 right-0 z-[9999] flex [-webkit-app-region:no-drag]', TITLE_BAR_HEIGHT_CLASS)}>
-            <WindowControls />
+            <WindowControls hasWindowControls />
           </div>
         )}
       </div>

@@ -1,10 +1,9 @@
 import './Sidebar.css'
 
 import useMacTransparentWindow from '@renderer/hooks/useMacTransparentWindow'
-import { isMac } from '@renderer/utils/platform'
 import { cn } from '@renderer/utils/style'
 import { Search } from 'lucide-react'
-import React, { useCallback, useEffect, useRef } from 'react'
+import React from 'react'
 
 import { getSidebarDisplayWidth, getSidebarLayout } from './constants'
 import { DefaultLogo } from './primitives'
@@ -26,12 +25,11 @@ export interface SidebarProps {
   searchLabel?: string
   extensionsLabel?: string
   actions?: SidebarFooterActions
-  onHoverChange?: (visible: boolean) => void
   onResizePreview?: (width: number | null) => void
   onSearchClick?: () => void
   onExtensionsClick?: () => void
   onEntriesReorder?: (event: { oldIndex: number; newIndex: number }) => void
-  onDismiss?: () => void
+  onEntryOpen?: () => void
 }
 
 export function Sidebar({
@@ -46,18 +44,14 @@ export function Sidebar({
   searchLabel = '',
   extensionsLabel = '',
   actions,
-  onHoverChange,
   onResizePreview,
   onSearchClick,
   onExtensionsClick,
   onEntriesReorder,
-  onDismiss
+  onEntryOpen
 }: SidebarProps) {
   const isMacTransparentWindow = useMacTransparentWindow()
   const { sidebarRef, startResizing } = useSidebarResize(width, setWidth, onResizePreview)
-  const hoverTimeout = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const contextMenuOpenRef = useRef(false)
-  const floatingPointerInsideRef = useRef(false)
   const layout = getSidebarLayout(width)
   const showFooter = Boolean(extensionsLabel || user || onExtensionsClick || actions)
   const showSearch = Boolean(onSearchClick)
@@ -73,120 +67,60 @@ export function Sidebar({
     </div>
   )
 
-  const handleDismiss = useCallback(() => {
-    onDismiss?.()
-  }, [onDismiss])
-
-  const clearHoverDismiss = useCallback(() => {
-    if (!hoverTimeout.current) return
-
-    clearTimeout(hoverTimeout.current)
-    hoverTimeout.current = null
-  }, [])
-
-  const scheduleHoverDismiss = useCallback(() => {
-    clearHoverDismiss()
-    hoverTimeout.current = setTimeout(handleDismiss, 300)
-  }, [clearHoverDismiss, handleDismiss])
-
-  useEffect(() => clearHoverDismiss, [clearHoverDismiss])
-
-  const handleContextMenuOpenChange = useCallback(
-    (open: boolean) => {
-      contextMenuOpenRef.current = open
-
-      if (open) {
-        clearHoverDismiss()
-        return
-      }
-
-      if (isFloating && !floatingPointerInsideRef.current) {
-        scheduleHoverDismiss()
-      }
-    },
-    [clearHoverDismiss, isFloating, scheduleHoverDismiss]
-  )
-
   const listProps = {
     entries,
     active,
     onReorder: onEntriesReorder,
-    onContextMenuOpenChange: handleContextMenuOpenChange
+    onEntryOpen
   }
   const footerProps = { user, actions, extensionsLabel, onExtensionsClick }
 
-  // --- Floating sidebar ---
+  // --- Floating sidebar (panel presentation only; Dialog host owns modal chrome) ---
   if (isFloating) {
     return (
-      <div className="fixed inset-0 z-40" onClick={handleDismiss}>
-        <div
-          className={cn(
-            'sidebar-theme slide-in-from-left-2 fixed top-0 bottom-0 left-0 flex w-43.5 animate-in select-none flex-col rounded-r-sm rounded-br-2xl bg-sidebar shadow-2xl backdrop-blur-2xl backdrop-saturate-150 duration-200 [-webkit-app-region:drag]',
-            isMac && 'pt-[env(titlebar-area-height)]'
-          )}
-          onClick={(event) => event.stopPropagation()}
-          onMouseLeave={() => {
-            floatingPointerInsideRef.current = false
-            if (!contextMenuOpenRef.current) {
-              scheduleHoverDismiss()
-            }
-          }}
-          onMouseEnter={() => {
-            floatingPointerInsideRef.current = true
-            clearHoverDismiss()
-          }}>
-          <div className="flex h-14 shrink-0 items-center gap-2.5 px-4 [-webkit-app-region:drag]">
-            {renderLogo()}
-            <span className="truncate text-sidebar-foreground text-sm">{title}</span>
-          </div>
-
-          {showSearch && (
-            <div className="px-3 py-2">
-              <div
-                onClick={() => {
-                  onSearchClick?.()
-                  handleDismiss()
-                }}
-                className="flex cursor-pointer items-center gap-2 rounded-md bg-sidebar-accent/50 px-2.5 py-1.5 text-muted-foreground text-xs transition-colors [-webkit-app-region:no-drag] hover:bg-accent">
-                <Search size={13} />
-                <span>{searchLabel}</span>
-              </div>
-            </div>
-          )}
-
-          <div className="flex-1 overflow-y-auto py-1 [&::-webkit-scrollbar]:hidden">
-            <SidebarList layout="full" {...listProps} />
-          </div>
-
-          {showFooter && (
-            <div className="shrink-0">
-              <SidebarFooter layout="full" {...footerProps} />
-            </div>
-          )}
+      <div
+        data-testid="floating-sidebar"
+        className="sidebar-theme flex h-full w-43.5 select-none flex-col bg-sidebar [-webkit-app-region:drag]">
+        <div className="flex h-14 shrink-0 items-center gap-2.5 px-4 [-webkit-app-region:drag]">
+          {renderLogo()}
+          <span className="truncate text-sidebar-foreground text-sm">{title}</span>
         </div>
+
+        {showSearch && (
+          <div className="px-3 py-2">
+            <div
+              onClick={() => {
+                onSearchClick?.()
+                onEntryOpen?.()
+              }}
+              className="flex cursor-pointer items-center gap-2 rounded-md bg-sidebar-accent/50 px-2.5 py-1.5 text-muted-foreground text-xs transition-colors [-webkit-app-region:no-drag] hover:bg-accent">
+              <Search size={13} />
+              <span>{searchLabel}</span>
+            </div>
+          </div>
+        )}
+
+        <div
+          data-ui="sidebar.navigation"
+          className="flex-1 overflow-y-auto py-1 [-webkit-app-region:no-drag] [&::-webkit-scrollbar]:hidden">
+          <SidebarList layout="full" {...listProps} />
+        </div>
+
+        {showFooter && (
+          <div className="shrink-0">
+            <SidebarFooter layout="full" {...footerProps} />
+          </div>
+        )}
       </div>
     )
   }
 
-  // --- Hidden sidebar (hover zone + resize handle) ---
+  // --- Hidden sidebar (resize handle only; hover no longer opens navigation) ---
   if (layout === 'hidden') {
     return (
       <div ref={sidebarRef} className="relative h-full w-2 shrink-0">
-        <div
-          className="absolute inset-y-0 left-0 z-50 w-4 [-webkit-app-region:no-drag]"
-          onMouseEnter={() => {
-            if (hoverTimeout.current) clearTimeout(hoverTimeout.current)
-            hoverTimeout.current = setTimeout(() => onHoverChange?.(true), 200)
-          }}
-          onMouseLeave={() => {
-            if (hoverTimeout.current) clearTimeout(hoverTimeout.current)
-          }}>
-          <div
-            onMouseDown={(event) => {
-              onHoverChange?.(false)
-              startResizing(event)
-            }}
-            className="group/handle h-full w-full cursor-col-resize">
+        <div className="absolute inset-y-0 left-0 z-50 w-4 [-webkit-app-region:no-drag]">
+          <div onMouseDown={startResizing} className="group/handle h-full w-full cursor-col-resize">
             <div className="ml-0.5 h-full w-0.5 rounded-full bg-primary/30 opacity-0 transition-opacity group-hover/handle:opacity-100" />
           </div>
         </div>
@@ -203,7 +137,7 @@ export function Sidebar({
       style={{ width: actualWidth }}
       className={cn(
         'sidebar-theme group/sidebar relative z-20 flex h-full shrink-0 select-none flex-col [-webkit-app-region:drag]',
-        isMacTransparentWindow ? 'bg-transparent' : 'bg-sidebar'
+        isMacTransparentWindow ? 'bg-transparent backdrop-blur-xl backdrop-saturate-150' : 'bg-sidebar'
       )}>
       {/* Header */}
       <div
@@ -237,7 +171,7 @@ export function Sidebar({
         ))}
 
       {/* Content */}
-      <div className="flex-1 overflow-y-auto py-1 [&::-webkit-scrollbar]:hidden">
+      <div data-ui="sidebar.navigation" className="flex-1 overflow-y-auto py-1 [&::-webkit-scrollbar]:hidden">
         <SidebarList layout={layout} {...listProps} />
       </div>
 

@@ -37,6 +37,8 @@ export interface ChatConversationControlsProps {
   shouldAutoSelectCreatedAssistant: boolean
   side: 'top' | 'bottom'
   iconOnly?: boolean
+  /** Hide the assistant selector — ChatWise-style header shows only the model. */
+  hideAssistantSelector?: boolean
   onDialogCloseAutoFocus?: () => void
   onAssistantChange: (assistantId: string | null) => void | Promise<void>
   onModelSelect: (model: Model | undefined) => void
@@ -61,6 +63,7 @@ export function ChatConversationControls({
   shouldAutoSelectCreatedAssistant,
   side,
   iconOnly = false,
+  hideAssistantSelector = false,
   onDialogCloseAutoFocus,
   onAssistantChange,
   onModelSelect,
@@ -109,17 +112,19 @@ export function ChatConversationControls({
 
   return (
     <>
-      <AssistantSelector
-        multi={false}
-        value={assistantId}
-        onChange={onAssistantChange}
-        autoSelectOnCreate={shouldAutoSelectCreatedAssistant}
-        side={side}
-        align="start"
-        mountStrategy="lazy-keep"
-        onDialogCloseAutoFocus={onDialogCloseAutoFocus}
-        trigger={assistantTrigger}
-      />
+      {!hideAssistantSelector && (
+        <AssistantSelector
+          multi={false}
+          value={assistantId}
+          onChange={onAssistantChange}
+          autoSelectOnCreate={shouldAutoSelectCreatedAssistant}
+          side={side}
+          align="start"
+          mountStrategy="lazy-keep"
+          onDialogCloseAutoFocus={onDialogCloseAutoFocus}
+          trigger={assistantTrigger}
+        />
+      )}
       {useMentionedModelSelector && isMentionedModelSelectorLocked ? (
         <SelectedModelsTrigger
           className={mentionedModelTriggerClassName}

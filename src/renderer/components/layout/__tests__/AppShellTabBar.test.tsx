@@ -108,9 +108,10 @@ vi.mock('@renderer/components/command', () => ({
   CommandTooltip: ({ children }: { children: React.ReactNode }) => <>{children}</>
 }))
 
+import { getTabCapabilities } from '@renderer/utils/tabCapabilities'
 import type { Tab } from '@shared/data/cache/cacheValueTypes'
 
-import { AppShellTabBar, getTabCapabilities } from '../AppShellTabBar'
+import { AppShellTabBar } from '../AppShellTabBar'
 
 const createTab = (id: string, overrides: Partial<Tab> = {}): Tab => ({
   id,

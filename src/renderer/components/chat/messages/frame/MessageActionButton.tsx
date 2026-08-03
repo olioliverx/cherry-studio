@@ -21,8 +21,8 @@ export const MessageActionButton = ({
       active={active}
       icon={children}
       className={classNames(
-        'flex size-6.5 items-center justify-center rounded-md border-0 bg-transparent p-1 text-muted-foreground! transition-all duration-150 ease-out',
-        '[&_svg]:!size-[15px] [&_.icon-at]:text-[9px] [&_.icon]:text-current! [&_.iconfont]:text-[9px] [&_.iconfont]:text-current! [&_.lucide]:text-current!',
+        'flex size-6 items-center justify-center rounded-md border-0 bg-transparent p-1 text-muted-foreground! transition-colors duration-150 ease-out',
+        '[&_svg]:!size-3.5 [&_.icon-at]:text-[9px] [&_.icon]:text-current! [&_.iconfont]:text-[9px] [&_.iconfont]:text-current! [&_.lucide]:text-current!',
         'enabled:cursor-pointer enabled:hover:text-foreground!',
         'enabled:[&_.iconfont]:cursor-pointer enabled:[&_svg]:cursor-pointer',
         softHoverBg ? 'enabled:hover:bg-muted' : 'enabled:hover:bg-accent',

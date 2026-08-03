@@ -874,6 +874,7 @@ describe('Sessions', () => {
   it('keeps the sortable session list mounted and preserves scroll position during refresh', () => {
     const view = render(<SessionsForTest />)
     const listbox = screen.getByRole('listbox')
+    expect(listbox).toHaveClass('shell-launcher-clearance')
     listbox.scrollTop = 640
 
     setupSessions({ isValidating: true })
@@ -927,6 +928,7 @@ describe('Sessions', () => {
 
     expect(screen.queryByText('New task')).not.toBeInTheDocument()
     expect(screen.queryByLabelText('Display mode')).not.toBeInTheDocument()
+    expect(screen.getByRole('listbox')).not.toHaveClass('shell-launcher-clearance')
 
     // Behavior: the right panel exposes the search control and drops the sidebar's new/display-mode
     // affordances. (Styling specifics intentionally not pinned here.)

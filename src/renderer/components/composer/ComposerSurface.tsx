@@ -2137,12 +2137,12 @@ export default function ComposerSurface({
       data-composer-inputbar=""
       data-composer-presentation={isCompact ? 'compact' : 'regular'}
       className={cn(
-        'inputbar-container relative rounded-[20px] border-[0.5px] border-border bg-card shadow-sm transition-all duration-200 ease-in-out',
-        isCompact || editingState ? 'pt-0' : 'pt-2',
+        'inputbar-container relative rounded-xl border border-border/60 bg-card shadow-xs transition-all duration-200 ease-in-out',
+        isCompact || editingState ? 'pt-0' : 'pt-2.5',
         belowControls ? 'mb-0.5' : 'mb-3',
         isEditingBorderHighlighted && !isDragging && 'border-primary ring-2 ring-primary/20',
         isDragging &&
-          "border-2 border-success border-dashed before:pointer-events-none before:absolute before:inset-0 before:z-5 before:rounded-[18px] before:bg-success/[0.03] before:content-['']",
+          "border-2 border-success border-dashed before:pointer-events-none before:absolute before:inset-0 before:z-5 before:rounded-xl before:bg-success/[0.03] before:content-['']",
         isExpanded && 'expanded'
       )}>
       {!isCompact ? (
@@ -2167,7 +2167,7 @@ export default function ComposerSurface({
               <span
                 aria-hidden="true"
                 data-composer-expand-corner-line=""
-                className="pointer-events-none absolute top-1 right-1 size-3 origin-top-right scale-100 rounded-tr-[16px] border-foreground/60 border-t-[1.5px] border-r-[1.5px] opacity-70 transition-[opacity,scale] duration-200 ease-out group-focus-within/expand-corner:scale-50 group-focus-within/expand-corner:opacity-0 group-hover/expand-corner:scale-50 group-hover/expand-corner:opacity-0"
+                className="pointer-events-none absolute top-1 right-1 size-3 origin-top-right scale-100 rounded-tr-xl border-foreground/60 border-t-[1.5px] border-r-[1.5px] opacity-70 transition-[opacity,scale] duration-200 ease-out group-focus-within/expand-corner:scale-50 group-focus-within/expand-corner:opacity-0 group-hover/expand-corner:scale-50 group-hover/expand-corner:opacity-0"
               />
               <Button
                 type="button"
@@ -2189,13 +2189,13 @@ export default function ComposerSurface({
         data-composer-compact-row={isCompact ? '' : undefined}
         className={
           isCompact
-            ? 'grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-1 px-2 py-1'
+            ? 'grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-1.5 px-2.5 py-1.5'
             : leadingContent
               ? 'flex items-start'
               : 'contents'
         }>
         {isCompact ? <ComposerToolMenu inputAdapter={inputAdapter} unifiedPanelControl={unifiedPanelControl} /> : null}
-        {leadingContent ? <div className="shrink-0 pt-1.5 pl-3.5">{leadingContent}</div> : null}
+        {leadingContent ? <div className="shrink-0 pt-1.5 pl-4">{leadingContent}</div> : null}
         <div
           ref={frameRef}
           data-ui="part:composer-input"
@@ -2225,7 +2225,7 @@ export default function ComposerSurface({
         <div
           data-ui="part:composer-actions"
           data-composer-toolbar=""
-          className="relative z-2 flex h-10 shrink-0 flex-row justify-between gap-4 px-2 py-1.25">
+          className="relative z-2 flex h-11 shrink-0 flex-row items-center justify-between gap-4 px-2.5 py-1.5">
           <div className="flex min-w-0 flex-1 items-center overflow-hidden">{leftControls}</div>
           <div className="flex flex-row items-center gap-1.5">
             {sendAccessoryElement}
@@ -2255,7 +2255,7 @@ export default function ComposerSurface({
           onDragOver={handleDragOver}
           onDrop={handleDrop}>
           {belowControls ? (
-            <div className="mb-6 rounded-[20px] bg-muted/45 pb-1.5 dark:bg-muted/25">
+            <div className="mb-6 rounded-xl bg-muted/45 pb-1.5 dark:bg-muted/25">
               {queueContent}
               {inputbarStack}
               <div className="min-w-0 overflow-hidden px-2 pt-0.5">{belowControls}</div>

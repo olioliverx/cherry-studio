@@ -764,6 +764,24 @@ describe('HomePage', () => {
     expect(screen.queryByTestId('home-tabs')).not.toBeInTheDocument()
   })
 
+  it('keeps the home resource rail collapsed for the new-user topic.tab.show default while preserving the toggle', async () => {
+    expect(DefaultPreferences.default['topic.tab.show']).toBe(false)
+    homeMocks.preferenceValues.set('topic.tab.show', DefaultPreferences.default['topic.tab.show'])
+    homeMocks.preferenceValues.set('topic.tab.display_mode', 'time')
+
+    render(<HomePage />)
+
+    const shell = screen.getByTestId('home-chat-shell')
+    expect(within(shell).getByTestId('pane-open')).toHaveTextContent('false')
+    expect(within(shell).getByTestId('show-resource-list-controls')).toHaveTextContent('true')
+    expect(within(shell).getByRole('button', { name: 'Toggle sidebar' })).toBeInTheDocument()
+
+    fireEvent.click(within(shell).getByRole('button', { name: 'Toggle sidebar' }))
+
+    await waitFor(() => expect(within(shell).getByTestId('pane-open')).toHaveTextContent('true'))
+    expect(homeMocks.setShowSidebar).toHaveBeenCalledWith(true)
+  })
+
   it('passes the same assistant topic source to the classic rail and right panel', () => {
     homeMocks.preferenceValues.set('topic.tab.display_mode', 'assistant')
 

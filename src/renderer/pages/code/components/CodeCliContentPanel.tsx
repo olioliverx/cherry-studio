@@ -95,8 +95,8 @@ export const CodeCliContentPanel: FC<CodeCliContentPanelProps> = ({
   useEffect(() => setShowInstallError(false), [selectedCliTool])
 
   return (
-    <div className="flex-1 overflow-y-auto px-6 py-2.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-      <div className="mx-auto max-w-2xl space-y-5">
+    <div className="flex-1 overflow-y-auto px-6 py-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+      <div className="mx-auto max-w-2xl space-y-4">
         {versionCard.visible && (
           <VersionStatusCard
             toolId={selectedCliTool}
@@ -136,7 +136,7 @@ export const CodeCliContentPanel: FC<CodeCliContentPanelProps> = ({
         )}
 
         {providerState.providerless ? (
-          <div className="rounded-lg border border-border-subtle bg-accent/10 px-4 py-3 text-muted-foreground text-xs">
+          <div className="rounded-md border border-border-subtle bg-card px-4 py-3 text-muted-foreground text-xs">
             {t('code.providerless_hint')}
           </div>
         ) : (
@@ -183,7 +183,7 @@ export const CodeCliContentPanel: FC<CodeCliContentPanelProps> = ({
               variant="outline"
               size="sm"
               onClick={() => openSettingsTab('/settings/provider')}
-              className="w-full rounded-xl border-border-subtle border-dashed py-2 text-muted-foreground hover:border-border hover:text-foreground">
+              className="w-full rounded-md border-border-subtle border-dashed py-2 text-muted-foreground hover:border-border-strong hover:text-foreground">
               {t(getAddProviderHintKey(selectedCliTool))}
               <ExternalLink size={10} />
             </Button>

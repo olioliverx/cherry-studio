@@ -649,7 +649,7 @@ const TranslatePage: FC = () => {
       <Navbar />
 
       <div className="relative flex min-h-0 flex-1 flex-col overflow-hidden bg-background">
-        <div className="flex shrink-0 items-center gap-3 border-border-subtle border-b p-3">
+        <div className="flex h-11 shrink-0 items-center gap-3 border-border-subtle border-b px-4 py-1.5">
           <TranslateLanguageBar
             className="px-0 py-0 lg:px-0"
             sourceLanguage={sourceLanguage}
@@ -704,7 +704,7 @@ const TranslatePage: FC = () => {
                   size="icon"
                   aria-label={selectedModel?.name ?? t('translate.settings.model_placeholder')}
                   title={selectedModel?.name ?? t('translate.settings.model_placeholder')}
-                  className="size-8 rounded-full p-0 shadow-none hover:bg-accent">
+                  className="size-8 rounded-md p-0 shadow-none hover:bg-accent">
                   {selectedModel ? (
                     selectedModelIcon ? (
                       <span className="flex size-6 shrink-0 items-center justify-center overflow-hidden rounded-full">

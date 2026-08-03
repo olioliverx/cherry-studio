@@ -18,8 +18,8 @@ export const ControlButton = ({
       'relative flex h-full w-[46px] cursor-pointer items-center justify-center rounded-none border-none bg-transparent p-0',
       'text-foreground outline-none transition-[background,color] duration-150 [&_svg]:pointer-events-none',
       $isClose
-        ? 'hover:bg-[#e81123] hover:text-white active:bg-[#c50e1f] active:text-white'
-        : 'hover:bg-[rgba(128,128,128,0.3)] hover:text-foreground active:bg-[rgba(128,128,128,0.4)] active:text-foreground',
+        ? 'hover:bg-[#e81123] hover:text-white focus-visible:bg-[#e81123] focus-visible:text-white active:bg-[#c50e1f] active:text-white'
+        : 'hover:bg-[rgba(128,128,128,0.3)] hover:text-foreground focus-visible:bg-[rgba(128,128,128,0.3)] focus-visible:text-foreground active:bg-[rgba(128,128,128,0.4)] active:text-foreground',
       className
     )
   })

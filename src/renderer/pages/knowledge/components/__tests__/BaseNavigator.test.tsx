@@ -568,6 +568,7 @@ describe('BaseNavigator', () => {
 
     const { rerender } = render(<BaseNavigator {...baseProps} bases={threeBases} />)
 
+    expect(screen.getByText('Alpha').closest('.shell-launcher-clearance')).toBeInTheDocument()
     expect(screen.queryByPlaceholderText('搜索知识库...')).toBeNull()
     // The create action stays put regardless.
     expect(screen.getByRole('button', { name: '新建知识库' })).toBeInTheDocument()

@@ -1,5 +1,5 @@
-appId: com.kangfenmao.CherryStudio
-productName: Cherry Studio
+appId: com.oliver.cherry-studio.chatwise
+productName: Cherry Studio ChatWise
 electronLanguages:
   - zh-CN
   - zh-TW
@@ -14,9 +14,9 @@ directories:
   buildResources: build
 
 protocols:
-  - name: Cherry Studio
+  - name: Cherry Studio ChatWise
     schemes:
-      - cherrystudio
+      - cherrystudio-chatwise
 files:
   - "**/*"
   - "!**/{.vscode,.yarn,.yarn-lock,.github,.cursorrules,.prettierrc}"
@@ -135,10 +135,10 @@ linux:
   category: Utility
   desktop:
     entry:
-      Name: Cherry Studio
-      StartupWMClass: CherryStudio
+      Name: Cherry Studio ChatWise
+      StartupWMClass: Cherry Studio ChatWise
   mimeTypes:
-    - x-scheme-handler/cherrystudio
+    - x-scheme-handler/cherrystudio-chatwise
 rpm:
   # Workaround for electron build issue on rpm package:
   # https://github.com/electron/forge/issues/3594

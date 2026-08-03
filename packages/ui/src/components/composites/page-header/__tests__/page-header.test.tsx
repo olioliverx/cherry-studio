@@ -29,6 +29,11 @@ describe('PageHeader', () => {
     expect(heading.className).toMatch(/\btruncate\b/)
   })
 
+  it('does not shrink when its sibling becomes the page scroll region', () => {
+    render(<PageHeader title="Settings" data-testid="page-header" />)
+    expect(screen.getByTestId('page-header')).toHaveClass('shrink-0')
+  })
+
   it('forwards extra props like data-testid and merges className', () => {
     render(<PageHeader title="X" data-testid="page-header" className="custom-extra" />)
     const node = screen.getByTestId('page-header')

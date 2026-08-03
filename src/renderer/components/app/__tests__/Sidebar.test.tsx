@@ -1,13 +1,63 @@
 // @vitest-environment jsdom
 import '@testing-library/jest-dom/vitest'
 
+import type * as TabHooks from '@renderer/hooks/tab'
 import type { SidebarAppId } from '@renderer/utils/sidebar'
+import type { Tab } from '@shared/data/cache/cacheValueTypes'
 import type { SidebarFavoriteItem } from '@shared/data/preference/preferenceTypes'
-import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
-import type { ReactNode } from 'react'
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
+import { type ReactNode, useState } from 'react'
+import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest'
 
+import type * as ShellTabBarActionsModule from '../../layout/ShellTabBarActions'
 import type * as SidebarConstants from '../../Sidebar/constants'
+
+// Real Dialog primitives so focus trap / Escape / overlay close match production.
+// Keep Tooltip passive (setup-style wrapper) so launcher focus tests do not fight
+// Radix tooltip open-state updates outside act().
+vi.mock('@cherrystudio/ui', async (importOriginal) => {
+  const React = await import('react')
+  const actual = await importOriginal<Record<string, unknown>>()
+  return {
+    ...actual,
+    Tooltip: ({
+      children,
+      classNames,
+      content,
+      title
+    }: {
+      children?: React.ReactNode
+      classNames?: { placeholder?: string }
+      content?: React.ReactNode
+      title?: React.ReactNode
+    }) => {
+      const tooltipText = content || title
+      return React.createElement(
+        'div',
+        {
+          className: classNames?.placeholder,
+          'data-testid': 'tooltip',
+          ...(tooltipText ? { 'data-title': String(tooltipText) } : {})
+        },
+        children
+      )
+    }
+  }
+})
+
+beforeAll(() => {
+  if (!HTMLElement.prototype.hasPointerCapture) {
+    HTMLElement.prototype.hasPointerCapture = () => false
+  }
+  if (!HTMLElement.prototype.releasePointerCapture) {
+    HTMLElement.prototype.releasePointerCapture = () => {}
+  }
+  if (!HTMLElement.prototype.setPointerCapture) {
+    HTMLElement.prototype.setPointerCapture = () => {}
+  }
+  HTMLElement.prototype.scrollIntoView = () => {}
+})
 
 type FakeTab = {
   id: string
@@ -49,18 +99,49 @@ const mocks = vi.hoisted(() => ({
   allApps: [] as FakeMiniApp[],
   visibleMiniApps: null as FakeMiniApp[] | null,
   pinnedMiniApps: [] as FakeMiniApp[],
+  useRealShellActions: false,
+  useRealTabs: false,
+  persistedActiveTabId: 'home',
+  persistedNormalTabs: [] as Tab[],
+  persistedPinnedTabs: [] as Tab[],
   onEntriesReorder: undefined as ((event: { oldIndex: number; newIndex: number }) => void) | undefined
 }))
 
-vi.mock('@data/hooks/useCache', () => ({
-  usePersistCache: () => [
-    mocks.sidebarWidth,
-    (width: number) => {
-      mocks.sidebarWidth = width
-      mocks.setSidebarWidth(width)
+vi.mock('@data/hooks/useCache', async () => {
+  const React = await import('react')
+  return {
+    usePersistCache: (key: string) => {
+      const initialValue =
+        key === 'ui.tab.pinned_tabs'
+          ? mocks.persistedPinnedTabs
+          : key === 'ui.tab.normal_tabs'
+            ? mocks.persistedNormalTabs
+            : key === 'ui.tab.active_tab_id'
+              ? mocks.persistedActiveTabId
+              : mocks.sidebarWidth
+      const [value, setValue] = React.useState(initialValue)
+      const setPersistedValue = React.useCallback(
+        (update: unknown) => {
+          setValue((previous) => {
+            const next = (
+              typeof update === 'function' ? (update as (current: unknown) => unknown)(previous) : update
+            ) as string | number | Tab[]
+            if (key === 'ui.tab.pinned_tabs') mocks.persistedPinnedTabs = next as Tab[]
+            else if (key === 'ui.tab.normal_tabs') mocks.persistedNormalTabs = next as Tab[]
+            else if (key === 'ui.tab.active_tab_id') mocks.persistedActiveTabId = next as string
+            else {
+              mocks.sidebarWidth = next as number
+              mocks.setSidebarWidth(next as number)
+            }
+            return next
+          })
+        },
+        [key]
+      )
+      return [value, setPersistedValue]
     }
-  ]
-}))
+  }
+})
 
 vi.mock('@data/hooks/usePreference', () => ({
   usePreference: (key: string) => {
@@ -99,26 +180,43 @@ vi.mock('@renderer/utils/routeTitle', () => ({
       '/app/chat': 'Chat',
       '/app/files': 'Files',
       '/app/translate': 'Translate'
-    })[url] ?? 'Chat'
+    })[url] ?? 'Chat',
+  isPageTitledRoute: (url: string) => url.startsWith('/app/chat') || url.startsWith('/app/agents'),
+  isTopLevelRoute: () => true
 }))
 
 vi.mock('@renderer/services/resourceListRevealEvents', () => ({
   emitResourceListReveal: mocks.emitResourceListReveal
 }))
 
-vi.mock('@renderer/hooks/tab', () => ({
-  useTabs: () => ({
-    activeTab: mocks.activeTab,
-    tabs: mocks.tabs,
-    openTab: mocks.openTab,
-    updateTab: mocks.updateTab,
-    setActiveTab: mocks.setActiveTab
-  }),
-  useOptionalTabsContext: () => ({
-    tabs: mocks.tabs,
-    openTab: mocks.openTab,
-    setActiveTab: mocks.setActiveTab
-  })
+vi.mock('@renderer/hooks/tab', async (importOriginal) => {
+  const actual = await importOriginal<typeof TabHooks>()
+  return {
+    ...actual,
+    useTabs: () =>
+      mocks.useRealTabs
+        ? actual.useTabs()
+        : {
+            activeTab: mocks.activeTab,
+            tabs: mocks.tabs,
+            openTab: mocks.openTab,
+            updateTab: mocks.updateTab,
+            setActiveTab: mocks.setActiveTab
+          },
+    useOptionalTabsContext: () =>
+      mocks.useRealTabs
+        ? actual.useOptionalTabsContext()
+        : {
+            tabs: mocks.tabs,
+            openTab: mocks.openTab,
+            setActiveTab: mocks.setActiveTab
+          }
+  }
+})
+
+vi.mock('@renderer/ipc', () => ({
+  ipcApi: { request: vi.fn(() => Promise.resolve(undefined)) },
+  useIpcOn: vi.fn()
 }))
 
 vi.mock('@renderer/services/mainWindowNavigation', () => ({
@@ -135,11 +233,18 @@ vi.mock('../../icons/SvgIcon', () => ({
   OpenClawSidebarIcon: () => null
 }))
 
-vi.mock('../../layout/ShellTabBarActions', () => ({
-  SidebarShellActions: ({ layout, onSettingsClick }: { layout: string; onSettingsClick: () => void }) => (
-    <button type="button" data-testid={`sidebar-shell-actions-${layout}`} onClick={onSettingsClick} />
-  )
-}))
+vi.mock('../../layout/ShellTabBarActions', async (importOriginal) => {
+  const actual = await importOriginal<typeof ShellTabBarActionsModule>()
+  return {
+    ...actual,
+    SidebarShellActions: (props: React.ComponentProps<typeof actual.SidebarShellActions>) =>
+      mocks.useRealShellActions ? (
+        <actual.SidebarShellActions {...props} />
+      ) : (
+        <button type="button" data-testid={`sidebar-shell-actions-${props.layout}`} onClick={props.onSettingsClick} />
+      )
+  }
+})
 
 type MockSidebarEntry = {
   key: string
@@ -166,9 +271,7 @@ vi.mock('../../Sidebar', async () => {
     MiniAppIcon: () => null,
     Sidebar: ({
       isFloating,
-      isFloatingClosing,
-      onDismiss,
-      onHoverChange,
+      onEntryOpen,
       onEntriesReorder,
       active,
       entries,
@@ -180,7 +283,6 @@ vi.mock('../../Sidebar', async () => {
       onResizePreview
     }: {
       isFloating?: boolean
-      isFloatingClosing?: boolean
       active?: { activeItem: string; activeTabId?: string }
       entries?: MockSidebarEntry[]
       title?: string
@@ -189,8 +291,7 @@ vi.mock('../../Sidebar', async () => {
       actions?: ReactNode | ((layout: 'icon' | 'full') => ReactNode)
       width?: number
       onResizePreview?: (width: number | null) => void
-      onDismiss?: () => void
-      onHoverChange?: (hovering: boolean) => void
+      onEntryOpen?: () => void
       onEntriesReorder?: (event: { oldIndex: number; newIndex: number }) => void
     }) => {
       mocks.onEntriesReorder = onEntriesReorder
@@ -199,12 +300,74 @@ vi.mock('../../Sidebar', async () => {
       const activeState = active ?? { activeItem: '' }
       const items = entries?.filter((entry) => parseEntryKey(entry.key).type === 'app')
       const dockedTabs = entries?.filter((entry) => parseEntryKey(entry.key).type === 'mini_app')
+      const navigation = (
+        <>
+          <div data-ui="sidebar.navigation" data-testid={isFloating ? 'floating-nav' : 'docked-nav'}>
+            {items?.map((item) => (
+              <div key={item.key}>
+                <button
+                  type="button"
+                  data-testid={`${isFloating ? 'floating' : 'sidebar'}-item-${parseEntryKey(item.key).id}`}
+                  onClick={() => {
+                    item.onOpen()
+                    onEntryOpen?.()
+                  }}>
+                  <span>{item.label}</span>
+                </button>
+                {item.contextMenuItems?.map((menuItem) => (
+                  <button
+                    key={menuItem.id}
+                    type="button"
+                    data-testid={`${isFloating ? 'floating' : 'sidebar'}-menu-${menuItem.id}`}
+                    disabled={menuItem.enabled === false}
+                    onClick={menuItem.onSelect}>
+                    {menuItem.label}
+                  </button>
+                ))}
+              </div>
+            ))}
+          </div>
+          <div data-testid={isFloating ? 'floating-mini-app-section' : 'sidebar-mini-app-section'}>
+            {dockedTabs?.map((miniTab) => (
+              <div key={miniTab.key}>
+                <button
+                  type="button"
+                  data-active={miniTab.isActive(activeState) ? 'true' : 'false'}
+                  data-testid={`${isFloating ? 'floating' : 'sidebar'}-mini-app-${parseEntryKey(miniTab.key).id}`}
+                  onClick={() => {
+                    miniTab.onOpen()
+                    onEntryOpen?.()
+                  }}>
+                  {miniTab.label}
+                </button>
+                {miniTab.contextMenuItems?.map((menuItem) => (
+                  <button
+                    key={menuItem.id}
+                    type="button"
+                    data-testid={`${isFloating ? 'floating' : 'sidebar'}-menu-${menuItem.id}`}
+                    disabled={menuItem.enabled === false}
+                    onClick={menuItem.onSelect}>
+                    {menuItem.label}
+                  </button>
+                ))}
+              </div>
+            ))}
+          </div>
+        </>
+      )
+
       return isFloating ? (
-        <div
-          className={isFloatingClosing ? 'slide-out-to-left-2 animate-out' : 'slide-in-from-left-2 animate-in'}
-          data-testid="floating-sidebar">
-          <button type="button" onClick={onDismiss}>
-            dismiss
+        <div data-testid="floating-sidebar" className="slide-in-from-left-2 bg-sidebar">
+          {navigation}
+          <div data-testid="floating-footer-actions">{typeof actions === 'function' ? actions('full') : actions}</div>
+          <button
+            type="button"
+            data-testid="floating-context-menu-open"
+            onClick={(event) => {
+              // Nested overlays must not count as outside dismissal for the drawer.
+              event.stopPropagation()
+            }}>
+            context
           </button>
         </div>
       ) : (
@@ -215,9 +378,7 @@ vi.mock('../../Sidebar', async () => {
           <div data-testid="sidebar-footer-actions">{typeof actions === 'function' ? actions('icon') : actions}</div>
           <button type="button" data-testid="preview-80" onClick={() => onResizePreview?.(80)} />
           <button type="button" data-testid="preview-null" onClick={() => onResizePreview?.(null)} />
-          <button type="button" onClick={() => onHoverChange?.(true)}>
-            reveal
-          </button>
+          <div data-testid="hidden-hot-zone" data-testid-hover="true" />
           <div data-testid="ui-sidebar" data-width={width} />
           <div data-testid="sidebar-items">
             {items?.map((item) => (
@@ -272,6 +433,7 @@ vi.mock('../../Sidebar', async () => {
 
 vi.mock('react-i18next', () => ({
   useTranslation: () => ({
+    i18n: { language: 'en-us' },
     t: (key: string, options?: { defaultValue?: string }) => {
       if (key === 'common.search') return 'Search'
       return options?.defaultValue ?? key
@@ -279,9 +441,35 @@ vi.mock('react-i18next', () => ({
   })
 }))
 
+import { useTabsContext } from '@renderer/hooks/tab'
 import { resolveSidebarAppTabEntryUrl } from '@renderer/utils/sidebar'
 
+import { TabsProvider } from '../../layout/TabsProvider'
 import Sidebar from '../Sidebar'
+
+/** Controlled harness: AppShell owns drawerOpen; mirror that for unit tests. */
+function ControlledSidebar() {
+  const [drawerOpen, setDrawerOpen] = useState(false)
+  return <Sidebar drawerOpen={drawerOpen} onDrawerOpenChange={setDrawerOpen} />
+}
+
+function ControlledSidebarWithTabs() {
+  const [drawerOpen, setDrawerOpen] = useState(false)
+  const { activeTabId, tabs } = useTabsContext()
+  return (
+    <>
+      <Sidebar drawerOpen={drawerOpen} onDrawerOpenChange={setDrawerOpen} />
+      <output aria-label="Active tab">{activeTabId}</output>
+      <output aria-label="Tab URLs">{tabs.map((item) => item.url).join(',')}</output>
+      <output aria-label="Dormant tabs">
+        {tabs
+          .filter((item) => item.isDormant)
+          .map((item) => item.id)
+          .join(',')}
+      </output>
+    </>
+  )
+}
 
 const appFavorite = (id: SidebarAppId): SidebarFavoriteItem => ({ type: 'app', id })
 const miniAppFavorite = (id: string): SidebarFavoriteItem => ({ type: 'mini_app', id })
@@ -324,8 +512,14 @@ afterEach(() => {
   mocks.visibleMiniApps = null
   mocks.pinnedMiniApps = []
   mocks.sidebarWidth = 50
+  mocks.useRealShellActions = false
+  mocks.useRealTabs = false
+  mocks.persistedActiveTabId = 'home'
+  mocks.persistedNormalTabs = []
+  mocks.persistedPinnedTabs = []
   vi.useRealTimers()
   document.documentElement.style.removeProperty('--sidebar-width')
+  document.documentElement.style.removeProperty('--shell-launcher-bottom-inset')
 })
 
 describe('app Sidebar', () => {
@@ -349,6 +543,213 @@ describe('app Sidebar', () => {
     fireEvent.click(screen.getByTestId('sidebar-shell-actions-icon'))
 
     expect(mocks.openSettingsTab).toHaveBeenCalledWith('/settings/provider')
+  })
+
+  it('opens an accessible modal drawer from the launcher and restores focus on Escape', async () => {
+    const user = userEvent.setup()
+    mocks.sidebarWidth = 0
+
+    render(<ControlledSidebar />)
+
+    const launcher = screen.getByRole('button', { name: 'common.open_sidebar' })
+    expect(launcher).toHaveAttribute('aria-haspopup', 'dialog')
+    launcher.focus()
+    await user.keyboard('{Enter}')
+
+    const dialog = await screen.findByRole('dialog', { name: 'common.open_sidebar' })
+    expect(dialog).toHaveAttribute('aria-modal', 'true')
+    expect(document.querySelectorAll('[role="dialog"]')).toHaveLength(1)
+
+    const overlay = document.querySelector('[data-slot="dialog-overlay"]')
+    expect(overlay).toBeInTheDocument()
+    expect(overlay?.className).toContain('bg-black/20')
+
+    const floatingSidebar = within(dialog).getByTestId('floating-sidebar')
+    expect(floatingSidebar).toBeInTheDocument()
+
+    // Focus enters the drawer (Radix FocusScope).
+    await waitFor(() => {
+      expect(dialog.contains(document.activeElement)).toBe(true)
+    })
+
+    await user.keyboard('{Escape}')
+
+    await waitFor(() => {
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+    })
+    await waitFor(() => expect(screen.getByRole('button', { name: 'common.open_sidebar' })).toHaveFocus())
+  })
+
+  it('wakes a dormant tab through the body-portaled manager without breaking drawer modality', async () => {
+    const user = userEvent.setup()
+    mocks.sidebarWidth = 0
+    mocks.useRealShellActions = true
+    mocks.useRealTabs = true
+    mocks.persistedNormalTabs = [
+      {
+        id: 'home',
+        type: 'route',
+        url: '/app/chat',
+        title: 'Chat',
+        lastAccessTime: 2,
+        isDormant: false
+      },
+      {
+        id: 'topic',
+        type: 'route',
+        url: '/app/chat?topicId=topic',
+        title: 'Topic',
+        lastAccessTime: 1,
+        isDormant: true
+      }
+    ]
+
+    render(
+      <TabsProvider initialDefaultTab={null}>
+        <ControlledSidebarWithTabs />
+      </TabsProvider>
+    )
+
+    const launcher = screen.getByRole('button', { name: 'common.open_sidebar' })
+    await user.click(launcher)
+    const dialog = await screen.findByRole('dialog', { name: 'common.open_sidebar' })
+    await user.click(within(dialog).getByRole('button', { name: 'tab.open_tabs' }))
+
+    const [tabsMenu] = await screen.findAllByRole('menu')
+    expect(tabsMenu.closest('[data-radix-popper-content-wrapper]')?.parentElement).toBe(document.body)
+    for (let element: Element | null = tabsMenu; element; element = element.parentElement) {
+      expect(element).not.toHaveAttribute('aria-hidden', 'true')
+    }
+
+    const dormantRow = within(tabsMenu).getByRole('menuitem', { name: /Topic.*tab.dormant/ })
+    dormantRow.focus()
+    await user.keyboard('{ArrowRight}')
+    const menus = await screen.findAllByRole('menu')
+    const actions = menus.at(-1)
+    if (!actions) throw new Error('Expected dormant tab actions')
+    await user.click(within(actions).getByRole('menuitem', { name: 'common.open' }))
+
+    await waitFor(() => expect(screen.getByRole('status', { name: 'Active tab' })).toHaveTextContent('topic'))
+    expect(screen.getByRole('status', { name: 'Dormant tabs' })).not.toHaveTextContent('topic')
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
+    expect(screen.queryByRole('menu')).not.toBeInTheDocument()
+    await waitFor(() => expect(launcher).toHaveFocus())
+    expect(document.body.style.pointerEvents).not.toBe('none')
+  })
+
+  it('creates a force-new Launchpad tab from the drawer manager and restores launcher focus', async () => {
+    const user = userEvent.setup()
+    mocks.sidebarWidth = 0
+    mocks.useRealShellActions = true
+    mocks.useRealTabs = true
+    mocks.persistedNormalTabs = [
+      {
+        id: 'home',
+        type: 'route',
+        url: '/app/chat',
+        title: 'Chat',
+        lastAccessTime: 1,
+        isDormant: false
+      }
+    ]
+
+    render(
+      <TabsProvider initialDefaultTab={null}>
+        <ControlledSidebarWithTabs />
+      </TabsProvider>
+    )
+
+    const launcher = screen.getByRole('button', { name: 'common.open_sidebar' })
+    await user.click(launcher)
+    const dialog = await screen.findByRole('dialog', { name: 'common.open_sidebar' })
+    await user.click(within(dialog).getByRole('button', { name: 'tab.open_tabs' }))
+    const menu = await screen.findByRole('menu')
+    await user.click(within(menu).getByRole('menuitem', { name: 'tab.new' }))
+
+    await waitFor(() => expect(screen.getByRole('status', { name: 'Tab URLs' })).toHaveTextContent('/app/launchpad'))
+    expect(mocks.persistedNormalTabs).toHaveLength(2)
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
+    expect(screen.queryByRole('menu')).not.toBeInTheDocument()
+    await waitFor(() => expect(launcher).toHaveFocus())
+    expect(document.body.style.pointerEvents).not.toBe('none')
+  })
+
+  it('does not open the drawer from pointer hover alone', async () => {
+    mocks.sidebarWidth = 0
+    render(<ControlledSidebar />)
+
+    fireEvent.mouseEnter(screen.getByTestId('hidden-hot-zone'))
+    fireEvent.mouseOver(document.body)
+
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+    expect(screen.queryByTestId('floating-sidebar')).not.toBeInTheDocument()
+  })
+
+  it('closes the drawer on overlay click and returns focus to the launcher', async () => {
+    const user = userEvent.setup()
+    mocks.sidebarWidth = 0
+    render(<ControlledSidebar />)
+
+    await user.click(screen.getByRole('button', { name: 'common.open_sidebar' }))
+    expect(await screen.findByRole('dialog', { name: 'common.open_sidebar' })).toBeInTheDocument()
+
+    const overlay = document.querySelector('[data-slot="dialog-overlay"]')
+    expect(overlay).toBeTruthy()
+    await user.click(overlay!)
+
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
+    await waitFor(() => expect(screen.getByRole('button', { name: 'common.open_sidebar' })).toHaveFocus())
+  })
+
+  it('closes the drawer after a navigation entry is activated and restores launcher focus', async () => {
+    const user = userEvent.setup()
+    mocks.sidebarWidth = 0
+    mocks.sidebarFavorites = [appFavorite('assistants'), appFavorite('agents')]
+    render(<ControlledSidebar />)
+
+    await user.click(screen.getByRole('button', { name: 'common.open_sidebar' }))
+    const dialog = await screen.findByRole('dialog', { name: 'common.open_sidebar' })
+
+    await user.click(within(dialog).getByTestId('floating-item-agents'))
+
+    expect(mocks.updateTab).toHaveBeenCalled()
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
+    await waitFor(() => expect(screen.getByRole('button', { name: 'common.open_sidebar' })).toHaveFocus())
+  })
+
+  it('keeps focus trapped inside the open drawer for Tab cycling', async () => {
+    const user = userEvent.setup()
+    mocks.sidebarWidth = 0
+    mocks.sidebarFavorites = [appFavorite('assistants'), appFavorite('agents')]
+    render(<ControlledSidebar />)
+
+    await user.click(screen.getByRole('button', { name: 'common.open_sidebar' }))
+    const dialog = await screen.findByRole('dialog', { name: 'common.open_sidebar' })
+
+    await waitFor(() => expect(dialog.contains(document.activeElement)).toBe(true))
+
+    for (let i = 0; i < 8; i += 1) {
+      await user.tab()
+      expect(dialog.contains(document.activeElement)).toBe(true)
+    }
+
+    for (let i = 0; i < 8; i += 1) {
+      await user.tab({ shift: true })
+      expect(dialog.contains(document.activeElement)).toBe(true)
+    }
+  })
+
+  it('keeps the drawer open when interacting with nested sidebar controls', async () => {
+    const user = userEvent.setup()
+    mocks.sidebarWidth = 0
+    render(<ControlledSidebar />)
+
+    await user.click(screen.getByRole('button', { name: 'common.open_sidebar' }))
+    const dialog = await screen.findByRole('dialog', { name: 'common.open_sidebar' })
+
+    await user.click(within(dialog).getByTestId('floating-context-menu-open'))
+
+    expect(screen.getByRole('dialog', { name: 'common.open_sidebar' })).toBeInTheDocument()
   })
 
   it('derives conversation detach URLs from instance metadata', () => {
@@ -749,5 +1150,55 @@ describe('app Sidebar', () => {
 
     expect(screen.getByTestId('ui-sidebar')).toHaveAttribute('data-width', '50')
     expect(document.documentElement.style.getPropertyValue('--sidebar-width')).toBe('50px')
+  })
+
+  it('publishes shell dimensions for hidden layout and removes them on unmount', () => {
+    mocks.sidebarWidth = 0
+    const { unmount } = render(<Sidebar />)
+
+    expect(document.documentElement.style.getPropertyValue('--sidebar-width')).toBe('0px')
+    expect(document.documentElement.style.getPropertyValue('--shell-launcher-bottom-inset')).toBe('48px')
+
+    unmount()
+
+    expect(document.documentElement.style.getPropertyValue('--sidebar-width')).toBe('')
+    expect(document.documentElement.style.getPropertyValue('--shell-launcher-bottom-inset')).toBe('')
+  })
+
+  it('publishes zero launcher bottom inset for icon/full layouts', () => {
+    mocks.sidebarWidth = 50
+    render(<Sidebar />)
+    expect(document.documentElement.style.getPropertyValue('--shell-launcher-bottom-inset')).toBe('0px')
+  })
+
+  it('closes the drawer when the rail expands out of hidden layout', async () => {
+    const user = userEvent.setup()
+    mocks.sidebarWidth = 0
+
+    function Harness() {
+      const [drawerOpen, setDrawerOpen] = useState(false)
+      return (
+        <div>
+          <span data-testid="drawer-open-flag">{drawerOpen ? 'open' : 'closed'}</span>
+          <Sidebar drawerOpen={drawerOpen} onDrawerOpenChange={setDrawerOpen} />
+        </div>
+      )
+    }
+
+    render(<Harness />)
+
+    await user.click(screen.getByRole('button', { name: 'common.open_sidebar' }))
+    expect(await screen.findByRole('dialog', { name: 'common.open_sidebar' })).toBeInTheDocument()
+    expect(screen.getByTestId('drawer-open-flag')).toHaveTextContent('open')
+
+    // Expand out of hidden via the existing resize-preview path (80 → icon layout).
+    fireEvent.click(screen.getByTestId('preview-80'))
+
+    await waitFor(() => {
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+      expect(screen.getByTestId('drawer-open-flag')).toHaveTextContent('closed')
+    })
+    // Launcher unmounts with non-hidden layout; no orphan dialog remains.
+    expect(screen.queryByRole('button', { name: 'common.open_sidebar' })).not.toBeInTheDocument()
   })
 })

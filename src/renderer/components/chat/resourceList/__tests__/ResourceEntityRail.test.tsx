@@ -145,6 +145,21 @@ const EDIT_ACTION: ResolvedAction<unknown> = {
 }
 
 describe('ResourceEntityRail', () => {
+  it('applies shared launcher clearance to the left resource list viewport', () => {
+    render(
+      <ResourceEntityRail
+        addLabel="New"
+        ariaLabel="Assistants"
+        items={ITEMS}
+        variant="assistant"
+        onAdd={vi.fn()}
+        onSelect={vi.fn()}
+      />
+    )
+
+    expect(screen.getByRole('listbox', { name: 'Assistants' })).toHaveClass('shell-launcher-clearance')
+  })
+
   it('renders a history button next to add that fires onOpenHistoryRecords', () => {
     const onOpenHistoryRecords = vi.fn()
 
