@@ -633,4 +633,113 @@ describe('AppShell', () => {
     render(<AppShell />)
     expect(screen.queryByTestId('shell-content-top-drag-region')).toBeNull()
   })
+
+  it.each([
+    {
+      name: 'Windows',
+      isMac: false,
+      isWin: true,
+      isLinux: false,
+      useSystemTitleBar: false,
+      fullscreen: false,
+      expectsCustomControls: true,
+      expectsWindowChrome: true,
+      expectsMacTrafficLights: false
+    },
+    {
+      name: 'Linux custom title bar',
+      isMac: false,
+      isWin: false,
+      isLinux: true,
+      useSystemTitleBar: false,
+      fullscreen: false,
+      expectsCustomControls: true,
+      expectsWindowChrome: true,
+      expectsMacTrafficLights: false
+    },
+    {
+      name: 'Linux system title bar',
+      isMac: false,
+      isWin: false,
+      isLinux: true,
+      useSystemTitleBar: true,
+      fullscreen: false,
+      expectsCustomControls: false,
+      expectsWindowChrome: false,
+      expectsMacTrafficLights: false
+    },
+    {
+      name: 'macOS windowed',
+      isMac: true,
+      isWin: false,
+      isLinux: false,
+      useSystemTitleBar: false,
+      fullscreen: false,
+      expectsCustomControls: false,
+      expectsWindowChrome: false,
+      expectsMacTrafficLights: true
+    },
+    {
+      name: 'macOS fullscreen',
+      isMac: true,
+      isWin: false,
+      isLinux: false,
+      useSystemTitleBar: false,
+      fullscreen: true,
+      expectsCustomControls: false,
+      expectsWindowChrome: false,
+      expectsMacTrafficLights: false
+    }
+  ])(
+    'renders the frame and control contract for $name',
+    async ({
+      isMac,
+      isWin,
+      isLinux,
+      useSystemTitleBar,
+      fullscreen,
+      expectsCustomControls,
+      expectsWindowChrome,
+      expectsMacTrafficLights
+    }) => {
+      mocks.platformState.isMac = isMac
+      mocks.platformState.isWin = isWin
+      mocks.platformState.isLinux = isLinux
+      mocks.preferenceState.useSystemTitleBar = useSystemTitleBar
+      if (fullscreen) {
+        mocks.ipcRequest.mockResolvedValue(true)
+      }
+
+      const { container } = render(<AppShell />)
+
+      if (fullscreen) {
+        await waitFor(() => {
+          expect(screen.queryByTestId('macos-traffic-light-spacer')).toBeNull()
+        })
+      }
+
+      await act(async () => {
+        await Promise.resolve()
+      })
+
+      const min = screen.queryByRole('button', { name: 'Minimize' })
+      const max = screen.queryByRole('button', { name: 'Maximize' })
+      const close = screen.queryByRole('button', { name: 'Close' })
+      const chrome = container.querySelector("[data-ui~='shell.window-chrome']")
+      const trafficLights = screen.queryByTestId('macos-traffic-light-spacer')
+
+      if (expectsCustomControls) {
+        expect(min).toBeInTheDocument()
+        expect(max).toBeInTheDocument()
+        expect(close).toBeInTheDocument()
+      } else {
+        expect(min).toBeNull()
+        expect(max).toBeNull()
+        expect(close).toBeNull()
+      }
+
+      expect(Boolean(chrome)).toBe(expectsWindowChrome)
+      expect(Boolean(trafficLights)).toBe(expectsMacTrafficLights)
+    }
+  )
 })
