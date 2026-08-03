@@ -19,18 +19,24 @@ const openTab = vi.fn()
 const updateTab = vi.fn()
 
 async function renderSubWindowAppShell({
+  detectedWindowControls = false,
   init = null,
+  isLinux = false,
   isMac = true,
+  isWin = false,
   isPageTitledRoute = () => false,
   tabs = defaultTabs
 }: {
+  detectedWindowControls?: boolean
   init?: SubWindowInitData | null
+  isLinux?: boolean
   isMac?: boolean
+  isWin?: boolean
   isPageTitledRoute?: (url: string) => boolean
   tabs?: ShellTab[]
 } = {}) {
   vi.resetModules()
-  vi.doMock('@renderer/utils/platform', () => ({ isMac, isWin: false, isLinux: false }))
+  vi.doMock('@renderer/utils/platform', () => ({ isMac, isWin, isLinux }))
   vi.doMock('@renderer/hooks/useWindowInitData', () => ({
     useWindowInitData: () => init
   }))
@@ -59,8 +65,9 @@ async function renderSubWindowAppShell({
     SubWindowTitle: () => <div data-testid="sub-window-title" />
   }))
   vi.doMock('@renderer/components/WindowControls', () => ({
-    WindowControls: () => <div data-testid="window-controls" />,
-    useHasWindowControls: () => false
+    WindowControls: ({ hasWindowControls }: { hasWindowControls?: boolean }) =>
+      hasWindowControls ? <div data-testid="window-controls" data-explicit-controls="true" /> : null,
+    useHasWindowControls: () => detectedWindowControls
   }))
   vi.doMock('../SubWindowTitleBar', () => ({
     SubWindowTitleBar: () => <header data-testid="sub-window-title-bar" />
@@ -140,6 +147,33 @@ describe('SubWindowAppShell', () => {
     expect(shell).toHaveAttribute('data-shell-local-top-inset', 'none')
     expect(shell?.style.getPropertyValue('--shell-local-top-inset')).toBe('0px')
     expect(main?.querySelector('[data-shell-local-top-reserve="titlebar"]')).toBeNull()
+  })
+
+  it.each([
+    { name: 'Windows', platform: { isMac: false, isWin: true, isLinux: false }, expected: true },
+    {
+      name: 'Linux with the system title bar preference enabled',
+      platform: { isMac: false, isWin: false, isLinux: true },
+      expected: true
+    },
+    { name: 'macOS', platform: { isMac: true, isWin: false, isLinux: false }, expected: false }
+  ])('follows the detached frameless-window control invariant on $name', async ({ platform, expected }) => {
+    await renderSubWindowAppShell({
+      ...platform,
+      // Models app.use_system_title_bar=true on Linux: the preference-derived hook says no custom controls.
+      detectedWindowControls: false
+    })
+
+    const shell = screen.getByTestId('sub-window-title-bar').parentElement
+    if (!(shell instanceof HTMLElement)) throw new Error('Expected detached shell')
+
+    if (expected) {
+      expect(screen.getByTestId('window-controls')).toBeInTheDocument()
+    } else {
+      expect(screen.queryByTestId('window-controls')).not.toBeInTheDocument()
+    }
+    expect(shell.style.getPropertyValue('--window-controls-width')).toBe(expected ? '138px' : '0px')
+    if (expected) expect(screen.getByTestId('window-controls')).toHaveAttribute('data-explicit-controls', 'true')
   })
 
   it('opens the detached tab from WindowManager init data', async () => {

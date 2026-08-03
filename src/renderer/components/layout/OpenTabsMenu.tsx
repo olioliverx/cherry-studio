@@ -16,7 +16,7 @@ import { useTabs } from '@renderer/hooks/tab'
 import { cn } from '@renderer/utils/style'
 import { getTabCapabilities } from '@renderer/utils/tabCapabilities'
 import type { Tab } from '@shared/data/cache/cacheValueTypes'
-import { Check, ExternalLink, Moon, PanelTop } from 'lucide-react'
+import { Check, ExternalLink, Moon, PanelTop, Plus } from 'lucide-react'
 import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 
@@ -27,7 +27,8 @@ type OpenTabsMenuProps = {
 
 export function OpenTabsMenu({ layout, onTabSelect }: OpenTabsMenuProps) {
   const { t } = useTranslation()
-  const { activeTabId, closeTab, closeTabs, detachTab, pinTab, reorderTabs, setActiveTab, tabs, unpinTab } = useTabs()
+  const { activeTabId, closeTab, closeTabs, detachTab, openTab, pinTab, reorderTabs, setActiveTab, tabs, unpinTab } =
+    useTabs()
   const { normalTabs, pinnedTabs } = useMemo(() => {
     const pinned: Tab[] = []
     const normal: Tab[] = []
@@ -41,6 +42,11 @@ export function OpenTabsMenu({ layout, onTabSelect }: OpenTabsMenuProps) {
 
   const selectTab = (tabId: string) => {
     setActiveTab(tabId)
+    onTabSelect?.()
+  }
+
+  const createTab = () => {
+    openTab('/app/launchpad', { title: t('title.launchpad'), forceNew: true })
     onTabSelect?.()
   }
 
@@ -103,6 +109,11 @@ export function OpenTabsMenu({ layout, onTabSelect }: OpenTabsMenuProps) {
         portalContainer={document.body}
         className="z-[90] max-h-[min(28rem,calc(100vh-1rem))] w-[min(19rem,calc(100vw-2rem))]">
         <DropdownMenuLabel className="text-muted-foreground text-xs">{label}</DropdownMenuLabel>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem onSelect={createTab}>
+          <Plus aria-hidden="true" />
+          {t('tab.new')}
+        </DropdownMenuItem>
         <DropdownMenuSeparator />
         {tabs.map((tab) => {
           const isPinned = !!tab.isPinned
