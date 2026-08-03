@@ -1,3 +1,22 @@
+> ## ⚠️ This is a modified fork — "Wonder Chat"
+>
+> **This repository is a modified version of [Cherry Studio](https://github.com/CherryHQ/cherry-studio) by CherryHQ.**
+> It is **not** the official Cherry Studio, and it is **not** affiliated with, endorsed by, or supported by CherryHQ.
+>
+> - **Modified since:** 2026-08-03
+> - **Nature of the modifications:** the application shell and user interface were restyled toward a neutral, content-first layout (single-sidebar chat, compact tab manager, restyled composer, Settings and theme tokens). The application was renamed to **Wonder Chat** with its own bundle identifier and URL scheme so it can be installed alongside the official Cherry Studio.
+> - **Upstream project:** https://github.com/CherryHQ/cherry-studio
+>
+> Cherry Studio is licensed under the **GNU Affero General Public License v3.0**, and this modified
+> version is distributed under the same license. The complete corresponding source for every build
+> published from this repository is this repository itself. See [LICENSE](./LICENSE).
+>
+> **Please do not report issues with this fork to the upstream Cherry Studio project.** "Cherry
+> Studio" is the name of the upstream project and is used here only to identify the origin of this
+> work; no trademark rights are claimed.
+>
+> The remainder of this README is inherited from the upstream project and describes Cherry Studio.
+
 <div align="right" >
   <details>
     <summary >🌐 Language</summary>

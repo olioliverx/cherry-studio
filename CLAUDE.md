@@ -61,7 +61,7 @@ The main model is the **orchestrator and decision-maker**, not the typist. It re
 Delegate the typing: multi-file edits from a decided plan, mechanical refactors and renames, test scaffolding, repetitive migrations, and read-only investigation sweeps.
 
 ```bash
-droid exec -m glm-5.2 --auto low --cwd /Users/oliver/Repos/cherry-studio "<task>"
+droid exec -m glm-5.2 --auto low --cwd "$(git rev-parse --show-toplevel)" "<task>"
 ```
 
 - `-m glm-5.2` is mandatory — never let a worker fall back to the default model.
