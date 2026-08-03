@@ -1,5 +1,5 @@
-appId: com.oliver.cherry-studio.chatwise
-productName: Cherry Studio ChatWise
+appId: com.oliver.wonderchat
+productName: Wonder Chat
 electronLanguages:
   - zh-CN
   - zh-TW
@@ -14,9 +14,9 @@ directories:
   buildResources: build
 
 protocols:
-  - name: Cherry Studio ChatWise
+  - name: Wonder Chat
     schemes:
-      - cherrystudio-chatwise
+      - wonderchat
 files:
   - "**/*"
   - "!**/{.vscode,.yarn,.yarn-lock,.github,.cursorrules,.prettierrc}"
@@ -86,7 +86,7 @@ extraResources:
   - from: "packages/provider-registry/data"
     to: "provider-registry"
 win:
-  executableName: Cherry Studio
+  executableName: Wonder Chat
   artifactName: ${productName}-${version}-${arch}-setup.${ext}
   extraResources:
     - from: "node_modules/@aiany/sqlite-vec-windows-${arch}/vec0.dll"
@@ -126,7 +126,7 @@ dmg:
   writeUpdateInfo: false
 linux:
   artifactName: ${productName}-${version}-${arch}.${ext}
-  executableName: CherryStudio
+  executableName: WonderChat
   target:
     - target: AppImage
     - target: deb
@@ -135,17 +135,18 @@ linux:
   category: Utility
   desktop:
     entry:
-      Name: Cherry Studio ChatWise
-      StartupWMClass: Cherry Studio ChatWise
+      Name: Wonder Chat
+      StartupWMClass: Wonder Chat
   mimeTypes:
-    - x-scheme-handler/cherrystudio-chatwise
+    - x-scheme-handler/wonderchat
 rpm:
   # Workaround for electron build issue on rpm package:
   # https://github.com/electron/forge/issues/3594
   fpm: ["--rpm-rpmbuild-define=_build_id_links none"]
 publish:
-  provider: generic
-  url: https://releases.cherry-ai.com
+  provider: github
+  owner: olioliverx
+  repo: cherry-studio
 electronDownload:
   mirror: https://npmmirror.com/mirrors/electron/
 beforePack: scripts/before-pack.js
