@@ -132,10 +132,14 @@ No data model, persistence, IPC, route, shortcut, or command behavior is intenti
 
 The fork builds as a separate app to avoid conflicts with the original Cherry Studio:
 
-- Product name: `Cherry Studio ChatWise`
-- Bundle ID: `com.oliver.cherry-studio.chatwise`
-- URL scheme: `cherrystudio-chatwise`
-- Separate userData: `~/Library/Application Support/Cherry Studio ChatWise/`
+- Product name: `Wonder Chat`
+- Bundle ID: `com.oliver.wonderchat`
+- URL scheme: `wonderchat`
+- Separate userData: `~/Library/Application Support/Wonder Chat/`
+
+Because the URL scheme differs from upstream's `cherrystudio`, the CherryIn OAuth sign-in
+(`cherrystudio://oauth/callback`, registered on a server this fork does not control) cannot call
+back into this build. Provider API keys are unaffected.
 
 ## Verification
 
