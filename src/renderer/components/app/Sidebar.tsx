@@ -68,6 +68,9 @@ export default function Sidebar({ ref, drawerOpen = false, onDrawerOpenChange }:
 
   useLayoutEffect(() => {
     document.documentElement.style.setProperty('--sidebar-width', `${getSidebarDisplayWidth(activeSidebarWidth)}px`)
+    return () => {
+      document.documentElement.style.removeProperty('--sidebar-width')
+    }
   }, [activeSidebarWidth])
 
   // Hidden layout exposes the bottom-left launcher; publish a bottom inset so

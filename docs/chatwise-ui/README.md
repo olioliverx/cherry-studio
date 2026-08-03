@@ -114,7 +114,7 @@ ChatWise UI characteristics:
 - Restyled Settings with quieter dividers, compact navigation, and more deliberate spacing
 - Reduced chat message, avatar, action-row, and composer chrome
 - Flattened the assistant resource rail while preserving Add Assistant, New Chat, groups, and actions
-- Added an explicit keyboard-focusable launcher for the hidden global navigation; left-edge hover reveal remains available
+- Added an explicit keyboard-focusable launcher and modal drawer for the hidden global navigation
 - Brought Agents, Files, Knowledge, Translate, Paintings, Notes, and Code into the same surface, divider, radius, and spacing system
 
 ## Roadmap Status
