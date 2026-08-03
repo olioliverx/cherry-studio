@@ -71,21 +71,13 @@ vi.mock('@renderer/hooks/useMacTransparentWindow', () => ({
 vi.mock('@renderer/components/command', () => ({
   CommandContextMenu: ({
     children,
-    extraItems,
-    onOpenChange
+    extraItems
   }: {
     children: ReactNode
     extraItems: ReadonlyArray<{ id: string; label: string; enabled?: boolean; onSelect?: () => void }>
-    onOpenChange?: (open: boolean) => void
   }) => (
     <div data-testid="command-context-menu">
       {children}
-      {onOpenChange && (
-        <>
-          <button type="button" data-testid="context-menu-open" onClick={() => onOpenChange(true)} />
-          <button type="button" data-testid="context-menu-close" onClick={() => onOpenChange(false)} />
-        </>
-      )}
       {extraItems.map((item) => (
         <button
           key={item.id}
@@ -157,14 +149,12 @@ afterEach(() => {
 function dragResizeFrom(width: number, moves: number | number[]) {
   const setWidth = vi.fn()
   const onResizePreview = vi.fn()
-  const onHoverChange = vi.fn()
   const { container, unmount } = render(
     <Sidebar
       width={width}
       setWidth={setWidth}
       active={{ activeItem: 'chat' }}
       entries={entries}
-      onHoverChange={onHoverChange}
       onResizePreview={onResizePreview}
     />
   )
@@ -176,7 +166,7 @@ function dragResizeFrom(width: number, moves: number | number[]) {
   }
   fireEvent.mouseUp(document)
 
-  return { setWidth, onResizePreview, onHoverChange, unmount }
+  return { setWidth, onResizePreview, unmount }
 }
 
 describe('Sidebar resize handle', () => {
@@ -294,12 +284,8 @@ describe('Sidebar resize handle', () => {
   })
 
   it('restores a hidden sidebar by dragging wider from the hot zone', () => {
-    const { setWidth, onResizePreview, onHoverChange } = dragResizeFrom(
-      SIDEBAR_HIDDEN_THRESHOLD - 10,
-      INTERMEDIATE_WIDTH
-    )
+    const { setWidth, onResizePreview } = dragResizeFrom(SIDEBAR_HIDDEN_THRESHOLD - 10, INTERMEDIATE_WIDTH)
 
-    expect(onHoverChange).toHaveBeenCalledWith(false)
     expect(onResizePreview).toHaveBeenNthCalledWith(1, INTERMEDIATE_WIDTH)
     expect(setWidth).toHaveBeenCalledTimes(1)
     expect(setWidth).toHaveBeenLastCalledWith(SIDEBAR_FULL_THRESHOLD)
@@ -384,14 +370,12 @@ describe('Sidebar resize handle', () => {
   })
 
   it('does not open navigation from the hidden hot-zone hover path', () => {
-    const onHoverChange = vi.fn()
     const { container } = render(
       <Sidebar
         width={SIDEBAR_HIDDEN_THRESHOLD - 10}
         setWidth={vi.fn()}
         active={{ activeItem: 'chat' }}
         entries={entries}
-        onHoverChange={onHoverChange}
       />
     )
 
@@ -399,7 +383,6 @@ describe('Sidebar resize handle', () => {
     fireEvent.mouseEnter(hotZone)
     fireEvent.mouseLeave(hotZone)
 
-    expect(onHoverChange).not.toHaveBeenCalledWith(true)
     expect(screen.queryByTestId('floating-sidebar')).not.toBeInTheDocument()
   })
 

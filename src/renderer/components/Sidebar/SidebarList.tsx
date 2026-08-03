@@ -13,7 +13,6 @@ export interface SidebarListProps {
   entries: ResolvedSidebarEntry[]
   active: SidebarActiveState
   onReorder?: (event: { oldIndex: number; newIndex: number }) => void
-  onContextMenuOpenChange?: (open: boolean) => void
   onEntryOpen?: () => void
 }
 
@@ -36,23 +35,21 @@ type ListProps = Omit<SidebarListProps, 'layout'>
 
 function EntryContextMenu({
   children,
-  items,
-  onOpenChange
+  items
 }: {
   children: ReactNode
   items?: ResolvedSidebarEntry['contextMenuItems']
-  onOpenChange?: (open: boolean) => void
 }) {
   if (!items?.length) return <>{children}</>
 
   return (
-    <CommandContextMenu location="webcontents.context" extraItems={items} onOpenChange={onOpenChange}>
+    <CommandContextMenu location="webcontents.context" extraItems={items}>
       {children}
     </CommandContextMenu>
   )
 }
 
-function IconList({ entries, active, onReorder, onContextMenuOpenChange, onEntryOpen }: ListProps) {
+function IconList({ entries, active, onReorder, onEntryOpen }: ListProps) {
   return (
     <SidebarSortableList
       items={entries}
@@ -64,7 +61,7 @@ function IconList({ entries, active, onReorder, onContextMenuOpenChange, onEntry
 
         return (
           <SidebarTooltip key={entry.key} content={entry.label}>
-            <EntryContextMenu items={entry.contextMenuItems} onOpenChange={onContextMenuOpenChange}>
+            <EntryContextMenu items={entry.contextMenuItems}>
               <button
                 type="button"
                 aria-label={entry.label}
@@ -88,7 +85,7 @@ function IconList({ entries, active, onReorder, onContextMenuOpenChange, onEntry
   )
 }
 
-function FullList({ entries, active, onReorder, onContextMenuOpenChange, onEntryOpen }: ListProps) {
+function FullList({ entries, active, onReorder, onEntryOpen }: ListProps) {
   return (
     <SidebarSortableList
       items={entries}
@@ -100,7 +97,7 @@ function FullList({ entries, active, onReorder, onContextMenuOpenChange, onEntry
 
         return (
           <div key={entry.key} className="relative">
-            <EntryContextMenu items={entry.contextMenuItems} onOpenChange={onContextMenuOpenChange}>
+            <EntryContextMenu items={entry.contextMenuItems}>
               <MenuItem
                 variant="ghost"
                 icon={entry.renderIcon(16, 'md')}

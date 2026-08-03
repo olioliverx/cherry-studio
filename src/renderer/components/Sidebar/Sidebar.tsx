@@ -3,7 +3,7 @@ import './Sidebar.css'
 import useMacTransparentWindow from '@renderer/hooks/useMacTransparentWindow'
 import { cn } from '@renderer/utils/style'
 import { Search } from 'lucide-react'
-import React, { type Ref } from 'react'
+import React from 'react'
 
 import { getSidebarDisplayWidth, getSidebarLayout } from './constants'
 import { DefaultLogo } from './primitives'
@@ -25,16 +25,11 @@ export interface SidebarProps {
   searchLabel?: string
   extensionsLabel?: string
   actions?: SidebarFooterActions
-  onHoverChange?: (visible: boolean) => void
   onResizePreview?: (width: number | null) => void
   onSearchClick?: () => void
   onExtensionsClick?: () => void
   onEntriesReorder?: (event: { oldIndex: number; newIndex: number }) => void
   onEntryOpen?: () => void
-  /** @deprecated Modal dismiss is owned by the Dialog host; kept for call-site compatibility. */
-  onDismiss?: () => void
-  /** @deprecated Focus is owned by Dialog FocusScope; kept for call-site compatibility. */
-  floatingPanelRef?: Ref<HTMLDivElement>
 }
 
 export function Sidebar({
@@ -49,7 +44,6 @@ export function Sidebar({
   searchLabel = '',
   extensionsLabel = '',
   actions,
-  onHoverChange,
   onResizePreview,
   onSearchClick,
   onExtensionsClick,
@@ -126,12 +120,7 @@ export function Sidebar({
     return (
       <div ref={sidebarRef} className="relative h-full w-2 shrink-0">
         <div className="absolute inset-y-0 left-0 z-50 w-4 [-webkit-app-region:no-drag]">
-          <div
-            onMouseDown={(event) => {
-              onHoverChange?.(false)
-              startResizing(event)
-            }}
-            className="group/handle h-full w-full cursor-col-resize">
+          <div onMouseDown={startResizing} className="group/handle h-full w-full cursor-col-resize">
             <div className="ml-0.5 h-full w-0.5 rounded-full bg-primary/30 opacity-0 transition-opacity group-hover/handle:opacity-100" />
           </div>
         </div>

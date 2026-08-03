@@ -49,7 +49,7 @@
 
 /* ─── ChatWise global shell mode ───────────────────────────────────────────
    AppShell sets data-shell-variant="chatwise" on its root for ALL routes.
-   The app sidebar defaults to hidden (hover left edge to reveal) and the
+   The app sidebar defaults to hidden (use the bottom-left launcher) and the
    browser-style tab bar is not rendered. The conversation shell and
    navigation pane fill the full window height (no tab-bar offset). The
    centered top bar uses the residual local top inset so it sits below the

@@ -1114,14 +1114,16 @@ describe('app Sidebar', () => {
     expect(document.documentElement.style.getPropertyValue('--sidebar-width')).toBe('50px')
   })
 
-  it('publishes launcher bottom inset for hidden layout and removes it on unmount', () => {
+  it('publishes shell dimensions for hidden layout and removes them on unmount', () => {
     mocks.sidebarWidth = 0
     const { unmount } = render(<Sidebar />)
 
+    expect(document.documentElement.style.getPropertyValue('--sidebar-width')).toBe('0px')
     expect(document.documentElement.style.getPropertyValue('--shell-launcher-bottom-inset')).toBe('48px')
 
     unmount()
 
+    expect(document.documentElement.style.getPropertyValue('--sidebar-width')).toBe('')
     expect(document.documentElement.style.getPropertyValue('--shell-launcher-bottom-inset')).toBe('')
   })
 
