@@ -460,6 +460,7 @@ function ControlledSidebarWithTabs() {
     <>
       <Sidebar drawerOpen={drawerOpen} onDrawerOpenChange={setDrawerOpen} />
       <output aria-label="Active tab">{activeTabId}</output>
+      <output aria-label="Tab URLs">{tabs.map((item) => item.url).join(',')}</output>
       <output aria-label="Dormant tabs">
         {tabs
           .filter((item) => item.isDormant)
@@ -630,6 +631,43 @@ describe('app Sidebar', () => {
 
     await waitFor(() => expect(screen.getByRole('status', { name: 'Active tab' })).toHaveTextContent('topic'))
     expect(screen.getByRole('status', { name: 'Dormant tabs' })).not.toHaveTextContent('topic')
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
+    expect(screen.queryByRole('menu')).not.toBeInTheDocument()
+    await waitFor(() => expect(launcher).toHaveFocus())
+    expect(document.body.style.pointerEvents).not.toBe('none')
+  })
+
+  it('creates a force-new Launchpad tab from the drawer manager and restores launcher focus', async () => {
+    const user = userEvent.setup()
+    mocks.sidebarWidth = 0
+    mocks.useRealShellActions = true
+    mocks.useRealTabs = true
+    mocks.persistedNormalTabs = [
+      {
+        id: 'home',
+        type: 'route',
+        url: '/app/chat',
+        title: 'Chat',
+        lastAccessTime: 1,
+        isDormant: false
+      }
+    ]
+
+    render(
+      <TabsProvider initialDefaultTab={null}>
+        <ControlledSidebarWithTabs />
+      </TabsProvider>
+    )
+
+    const launcher = screen.getByRole('button', { name: 'common.open_sidebar' })
+    await user.click(launcher)
+    const dialog = await screen.findByRole('dialog', { name: 'common.open_sidebar' })
+    await user.click(within(dialog).getByRole('button', { name: 'tab.open_tabs' }))
+    const menu = await screen.findByRole('menu')
+    await user.click(within(menu).getByRole('menuitem', { name: 'tab.new' }))
+
+    await waitFor(() => expect(screen.getByRole('status', { name: 'Tab URLs' })).toHaveTextContent('/app/launchpad'))
+    expect(mocks.persistedNormalTabs).toHaveLength(2)
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
     expect(screen.queryByRole('menu')).not.toBeInTheDocument()
     await waitFor(() => expect(launcher).toHaveFocus())

@@ -79,10 +79,12 @@ vi.mock('react-i18next', () => ({
         'tab.close_to_right': 'Close Tabs to the Right',
         'tab.dormant': 'Dormant',
         'tab.move_to_first': 'Move to First',
+        'tab.new': 'New Tab',
         'tab.open_in_new_window': 'Open in New Window',
         'tab.open_tabs': 'Open Tabs',
         'tab.pin': 'Pin Tab',
-        'tab.unpin': 'Unpin Tab'
+        'tab.unpin': 'Unpin Tab',
+        'title.launchpad': 'Launchpad'
       })[key] ?? key
   })
 }))
@@ -187,6 +189,23 @@ beforeEach(() => {
 })
 
 describe('OpenTabsMenu with TabsProvider', () => {
+  it('creates an additional Launchpad tab from the top-level New Tab action', async () => {
+    const user = userEvent.setup()
+    const existingLaunchpad = tab('launchpad', { title: 'Launchpad', url: '/app/launchpad' })
+    state.normalTabs = [tab('home', { title: 'Chat', url: '/app/chat' }), existingLaunchpad]
+    state.pinnedTabs = []
+    const onTabSelect = renderManager()
+
+    const { menu, trigger } = await openManager(user)
+    await user.click(within(menu).getByRole('menuitem', { name: 'New Tab' }))
+
+    await waitFor(() => expect(state.normalTabs.filter((item) => item.url === '/app/launchpad')).toHaveLength(2))
+    expect(state.activeTabId).not.toBe(existingLaunchpad.id)
+    expect(onTabSelect).toHaveBeenCalledOnce()
+    await waitFor(() => expect(screen.queryByRole('menu')).not.toBeInTheDocument())
+    expect(trigger).toHaveFocus()
+  })
+
   it('discovers restored pinned, normal, and dormant tabs and wakes a selection', async () => {
     const user = userEvent.setup()
     const onTabSelect = renderManager()
@@ -217,6 +236,8 @@ describe('OpenTabsMenu with TabsProvider', () => {
 
     const menu = await screen.findByRole('menu')
     expect(menu).toBeInTheDocument()
+    expect(within(menu).getByRole('menuitem', { name: 'New Tab' })).toHaveFocus()
+    await user.keyboard('{ArrowDown}')
     expect(within(menu).getByRole('menuitem', { name: /Files.*Dormant/ })).toHaveFocus()
 
     await user.keyboard('{ArrowRight}')
