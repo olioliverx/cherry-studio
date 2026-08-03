@@ -49,10 +49,10 @@ const BaseNavigatorContent = ({
   // shape keeps the accordion.
   const flatSection = groups.length === 0 && sections.length === 1 && sections[0].groupId === null ? sections[0] : null
 
-  // `pt-1 pb-3` mirrors the assistant and agent rails' list padding — the top inset is
-  // what separates the first row from the create action above it.
+  // The top inset separates the first row from the create action above it; the shared
+  // launcher class preserves the usual 12px bottom rhythm in every sidebar mode.
   return (
-    <Scrollbar className="min-h-0 flex-1 overflow-x-hidden pt-1 pb-3">
+    <Scrollbar className="shell-launcher-clearance min-h-0 flex-1 overflow-x-hidden pt-1">
       {isLoading ? (
         <div className="flex h-full items-center justify-center text-muted-foreground text-sm">
           {t('common.loading')}

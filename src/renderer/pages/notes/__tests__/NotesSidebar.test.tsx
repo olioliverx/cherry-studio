@@ -89,5 +89,9 @@ describe('NotesSidebar', () => {
 
     expect(mocks.handleSelectFiles).toHaveBeenCalledOnce()
     expect(mocks.handleSelectFolder).not.toHaveBeenCalled()
+    expect(screen.getByText('notes.drop_markdown_hint').closest('.flex-1')).toHaveClass(
+      'shell-launcher-clearance',
+      'shell-launcher-clearance-flush'
+    )
   })
 })

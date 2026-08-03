@@ -58,10 +58,16 @@ export function useHasWindowControls(): boolean {
   return isWin || (isLinux && !useSystemTitleBar)
 }
 
-const WindowControls: React.FC = () => {
+interface WindowControlsProps {
+  /** Creation-time frame mode for shells whose BrowserWindow is replaced after this preference changes. */
+  hasWindowControls?: boolean
+}
+
+const WindowControls: React.FC<WindowControlsProps> = ({ hasWindowControls: hasWindowControlsOverride }) => {
   const [isMaximized, setIsMaximized] = useState(false)
   const { t } = useTranslation()
-  const hasWindowControls = useHasWindowControls()
+  const detectedWindowControls = useHasWindowControls()
+  const hasWindowControls = hasWindowControlsOverride ?? detectedWindowControls
 
   useEffect(() => {
     // Check initial maximized state

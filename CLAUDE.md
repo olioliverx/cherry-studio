@@ -43,6 +43,42 @@ How to approach any coding task in this repo.
 2. [Step] → verify: [check]
 ```
 
+### Execution Model
+
+The main model is the **orchestrator and decision-maker**, not the typist. It reads code, decides the approach, splits work into bounded units, reviews every diff, and owns the gates. Mechanical execution is delegated to the **Droid CLI** running model id `glm-5.2`.
+
+#### Orchestrator (main model) keeps
+
+- Interpreting the request, resolving ambiguity, and asking the user.
+- Architecture and placement decisions (process boundaries, data system choice, API shape).
+- Splitting work into bounded units with explicit acceptance checks per unit.
+- Reviewing every worker diff line by line — a worker's self-report is a claim, never evidence.
+- Running the gates (`pnpm lint`, `pnpm test`, `pnpm build:check`, `pnpm format`).
+- All git writes (`commit -S --signoff`, `push`), PRs, releases, and anything destructive or outward-facing.
+
+#### Droid workers execute
+
+Delegate the typing: multi-file edits from a decided plan, mechanical refactors and renames, test scaffolding, repetitive migrations, and read-only investigation sweeps.
+
+```bash
+droid exec -m glm-5.2 --auto low --cwd /Users/oliver/Repos/cherry-studio "<task>"
+```
+
+- `-m glm-5.2` is mandatory — never let a worker fall back to the default model.
+- Autonomy: no flag for read-only investigation, `--auto low` for file edits, `--auto medium` only when the unit genuinely needs installs or a local build. Never `--auto high` (it permits `git push`) and never `--skip-permissions-unsafe`.
+- Run one unit per invocation, sequentially — parallel workers on one worktree corrupt each other's edits. For genuinely independent units use `-w/--worktree`.
+
+#### Worker prompt contract
+
+Every delegated prompt states, in this order:
+
+1. The exact files to touch, and an explicit do-not-touch list.
+2. The change, already decided — workers implement, they do not choose the approach.
+3. Acceptance checks the worker must run and report verbatim.
+4. Standing prohibitions: no commits, no pushes, no branch changes, no dependency additions, no scope beyond the listed files. Report blockers instead of improvising.
+
+If a worker returns a decision instead of a diff, the unit was under-specified — decide it in the orchestrator and re-delegate, don't let the worker pick.
+
 ### Operational Rules
 
 Project-specific tools, paths, and conventions.

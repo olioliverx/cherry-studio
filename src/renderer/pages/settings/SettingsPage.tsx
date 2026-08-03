@@ -58,7 +58,10 @@ const SettingsPage: FC = () => {
         <div
           data-ui="settings.navigation"
           className="flex min-h-0 w-(--settings-width) min-w-(--settings-width) flex-col border-border border-r-[0.5px]">
-          <PageHeader title={t('title.settings')} className="mb-1" />
+          {/* mt-3 is the default non-titlebar spacing (Windows/Linux + mac fullscreen).
+              AppShell titlebar ownership suppresses it via responsive.css so the
+              header is not double-padded under main's content-top inset. */}
+          <PageHeader title={t('title.settings')} className="mt-3 mb-2 pl-5" />
           <Scrollbar className="min-h-0 flex-1 select-none">
             <MenuList className={settingsSubmenuListClassName}>
               <MenuItem

@@ -1122,6 +1122,8 @@ describe('QuickPanelView', () => {
     const hiddenPanel = screen.getByTestId('quick-panel')
     expect(hiddenPanel.className).toContain('pointer-events-none')
     expect(hiddenPanel.className).not.toContain('pointer-events-auto')
+    expect(hiddenPanel).toHaveAttribute('inert')
+    expect(hiddenPanel).not.toHaveAttribute('aria-hidden')
 
     rerender(
       <QuickPanelProvider>
@@ -1133,6 +1135,67 @@ describe('QuickPanelView', () => {
     const visiblePanel = screen.getByTestId('quick-panel')
     expect(visiblePanel.className).toContain('pointer-events-auto')
     expect(visiblePanel.className).not.toContain('pointer-events-none')
+    expect(visiblePanel).not.toHaveAttribute('inert')
+    expect(visiblePanel).not.toHaveAttribute('aria-hidden')
+  })
+
+  it('restores composer focus and makes the retained panel inert when Escape closes from a row', async () => {
+    let composerInput: HTMLInputElement | null = null
+    const inputAdapter: QuickPanelInputAdapter = {
+      deleteTriggerRange: vi.fn(),
+      focus: () => composerInput?.focus(),
+      getCursorOffset: () => 1,
+      getText: () => '/',
+      insertText: vi.fn()
+    }
+
+    render(
+      <>
+        <input
+          ref={(element) => {
+            composerInput = element
+          }}
+          aria-label="Composer input"
+        />
+        <QuickPanelProvider>
+          <PanelHarness
+            captureDispatch={vi.fn()}
+            inputAdapter={inputAdapter}
+            items={[{ id: 'first', label: 'First action', icon: '1', action: vi.fn() }]}
+          />
+        </QuickPanelProvider>
+      </>
+    )
+
+    const row = await screen.findByRole('button', { name: /First action/ })
+    row.focus()
+    expect(row).toHaveFocus()
+
+    fireEvent.keyDown(row, { key: 'Escape' })
+
+    expect(screen.getByLabelText('Composer input')).toHaveFocus()
+    expect(screen.getByTestId('quick-panel')).toHaveAttribute('inert')
+    expect(screen.getByText('First action')).toBeInTheDocument()
+  })
+
+  it('blurs panel focus on close when no input adapter is available', async () => {
+    render(
+      <QuickPanelProvider>
+        <PanelHarness
+          captureDispatch={vi.fn()}
+          items={[{ id: 'first', label: 'First action', icon: '1', action: vi.fn() }]}
+        />
+      </QuickPanelProvider>
+    )
+
+    const row = await screen.findByRole('button', { name: /First action/ })
+    row.focus()
+    expect(row).toHaveFocus()
+
+    fireEvent.keyDown(row, { key: 'Escape' })
+
+    expect(row).not.toHaveFocus()
+    expect(screen.getByTestId('quick-panel')).toHaveAttribute('inert')
   })
 
   it('does not select always-visible items with Tab when the panel is collapsed', async () => {

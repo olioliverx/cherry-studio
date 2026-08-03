@@ -125,16 +125,26 @@ const PaintingPage: FC = () => {
         <div className="flex h-full flex-1 flex-col">
           <div className={paintingClasses.frame}>
             <div className={paintingClasses.surface}>
-              <PaintingStrip
-                selectedPaintingId={currentPainting.id}
-                runningPaintingId={generating ? currentPainting.id : undefined}
-                items={history.items}
-                hasMore={history.hasMore}
-                loadMore={history.loadMore}
-                onDeletePainting={list.remove}
-                onSelectPainting={list.select}
-                onAddPainting={list.add}
-              />
+              {/*
+                Authoritative empty signal is hydrated history items, not thumbnails.
+                Hide the 68px companion rail until at least one painting exists so a
+                loaded-empty (or still-hydrating empty) route stays content-first.
+                The empty route is already a fresh creation canvas (showcase + composer),
+                so the strip's New Image control is redundant there. Populated history
+                keeps the strip, New Image, scroll, and launcher-bottom clearance.
+              */}
+              {history.items.length > 0 && (
+                <PaintingStrip
+                  selectedPaintingId={currentPainting.id}
+                  runningPaintingId={generating ? currentPainting.id : undefined}
+                  items={history.items}
+                  hasMore={history.hasMore}
+                  loadMore={history.loadMore}
+                  onDeletePainting={list.remove}
+                  onSelectPainting={list.select}
+                  onAddPainting={list.add}
+                />
+              )}
 
               <div className={paintingClasses.centerPane}>
                 <div className={paintingClasses.centerStage}>

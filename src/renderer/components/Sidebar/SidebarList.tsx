@@ -13,7 +13,7 @@ export interface SidebarListProps {
   entries: ResolvedSidebarEntry[]
   active: SidebarActiveState
   onReorder?: (event: { oldIndex: number; newIndex: number }) => void
-  onContextMenuOpenChange?: (open: boolean) => void
+  onEntryOpen?: () => void
 }
 
 /**
@@ -35,23 +35,21 @@ type ListProps = Omit<SidebarListProps, 'layout'>
 
 function EntryContextMenu({
   children,
-  items,
-  onOpenChange
+  items
 }: {
   children: ReactNode
   items?: ResolvedSidebarEntry['contextMenuItems']
-  onOpenChange?: (open: boolean) => void
 }) {
   if (!items?.length) return <>{children}</>
 
   return (
-    <CommandContextMenu location="webcontents.context" extraItems={items} onOpenChange={onOpenChange}>
+    <CommandContextMenu location="webcontents.context" extraItems={items}>
       {children}
     </CommandContextMenu>
   )
 }
 
-function IconList({ entries, active, onReorder, onContextMenuOpenChange }: ListProps) {
+function IconList({ entries, active, onReorder, onEntryOpen }: ListProps) {
   return (
     <SidebarSortableList
       items={entries}
@@ -63,17 +61,20 @@ function IconList({ entries, active, onReorder, onContextMenuOpenChange }: ListP
 
         return (
           <SidebarTooltip key={entry.key} content={entry.label}>
-            <EntryContextMenu items={entry.contextMenuItems} onOpenChange={onContextMenuOpenChange}>
+            <EntryContextMenu items={entry.contextMenuItems}>
               <button
                 type="button"
                 aria-label={entry.label}
-                onClick={guardClick(entry.key, entry.onOpen)}
-                className={`relative flex h-9 w-9 items-center justify-center rounded-full transition-all duration-150 ${
+                onClick={guardClick(entry.key, () => {
+                  entry.onOpen()
+                  onEntryOpen?.()
+                })}
+                className={`relative flex h-9 w-9 items-center justify-center rounded-lg transition-all duration-150 ${
                   isActive
                     ? 'bg-[var(--sidebar-active-bg)] text-foreground'
                     : 'text-muted-foreground hover:bg-accent/60 hover:text-foreground'
                 }`}>
-                {isActive && <ActiveIndicator className="rounded-full" />}
+                {isActive && <ActiveIndicator className="rounded-lg" />}
                 {entry.renderIcon(18, 'lg')}
               </button>
             </EntryContextMenu>
@@ -84,7 +85,7 @@ function IconList({ entries, active, onReorder, onContextMenuOpenChange }: ListP
   )
 }
 
-function FullList({ entries, active, onReorder, onContextMenuOpenChange }: ListProps) {
+function FullList({ entries, active, onReorder, onEntryOpen }: ListProps) {
   return (
     <SidebarSortableList
       items={entries}
@@ -96,17 +97,20 @@ function FullList({ entries, active, onReorder, onContextMenuOpenChange }: ListP
 
         return (
           <div key={entry.key} className="relative">
-            <EntryContextMenu items={entry.contextMenuItems} onOpenChange={onContextMenuOpenChange}>
+            <EntryContextMenu items={entry.contextMenuItems}>
               <MenuItem
                 variant="ghost"
                 icon={entry.renderIcon(16, 'md')}
                 label={entry.label}
                 active={isActive}
-                onClick={guardClick(entry.key, entry.onOpen)}
-                className="rounded-xl data-[active=true]:bg-[var(--sidebar-active-bg)]"
+                onClick={guardClick(entry.key, () => {
+                  entry.onOpen()
+                  onEntryOpen?.()
+                })}
+                className="rounded-lg data-[active=true]:bg-[var(--sidebar-active-bg)]"
               />
             </EntryContextMenu>
-            {isActive && <ActiveIndicator className="rounded-xl" />}
+            {isActive && <ActiveIndicator className="rounded-lg" />}
           </div>
         )
       }}

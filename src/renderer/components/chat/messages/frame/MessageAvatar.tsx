@@ -4,10 +4,10 @@ import EmojiIcon from '@renderer/components/EmojiIcon'
 import { isEmoji } from '@renderer/utils/naming'
 import type { ComponentPropsWithoutRef, CSSProperties, ReactNode } from 'react'
 
-export const MESSAGE_AVATAR_SIZE = 30
-export const MESSAGE_EMOJI_AVATAR_FONT_SIZE = 17
+export const MESSAGE_AVATAR_SIZE = 28
+export const MESSAGE_EMOJI_AVATAR_FONT_SIZE = 16
 export const MESSAGE_AVATAR_CONTAINER_CLASS =
-  'message-avatar flex size-[30px] shrink-0 items-center justify-center overflow-hidden rounded-full p-0'
+  'message-avatar flex size-7 shrink-0 items-center justify-center overflow-hidden rounded-full p-0'
 export const MESSAGE_AVATAR_INNER_CLASS = 'size-full rounded-full p-0'
 export const MESSAGE_AVATAR_IMAGE_CLASS = 'size-full object-cover p-0'
 export const MESSAGE_AVATAR_FALLBACK_CLASS = 'size-full rounded-full p-0'

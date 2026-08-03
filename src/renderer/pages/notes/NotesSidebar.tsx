@@ -323,7 +323,7 @@ const NotesSidebar: FC<NotesSidebarProps> = ({
 
   return (
     <div
-      className="relative isolate flex h-full min-h-0 w-62.5 min-w-62.5 flex-col rounded-tl-lg border-border border-r bg-background"
+      className="relative isolate flex h-full min-h-0 w-62.5 min-w-62.5 flex-col border-border-subtle border-r bg-sidebar"
       onDragOver={(e) => {
         e.preventDefault()
         setIsDragOverSidebar(true)
@@ -345,9 +345,9 @@ const NotesSidebar: FC<NotesSidebarProps> = ({
         onSelectSortType={handleSelectSortType}
       />
 
-      <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+      <div className="shell-launcher-clearance shell-launcher-clearance-flush flex min-h-0 flex-1 flex-col overflow-hidden">
         {isShowSearch && isSearching && (
-          <div className="flex items-center gap-2 border-border border-b bg-muted px-3 py-2 text-muted-foreground text-xs">
+          <div className="flex items-center gap-2 border-border-subtle border-b bg-sidebar-accent px-3 py-2 text-muted-foreground text-xs">
             <Loader2 size={14} className="animate-spin" />
             <span>{t('notes.search.searching')}</span>
             <button
@@ -360,7 +360,7 @@ const NotesSidebar: FC<NotesSidebarProps> = ({
           </div>
         )}
         {isShowSearch && !isSearching && hasSearchKeyword && searchStats.total > 0 && (
-          <div className="flex items-center gap-2 border-border border-b bg-muted px-3 py-2 text-muted-foreground text-xs">
+          <div className="flex items-center gap-2 border-border-subtle border-b bg-sidebar-accent px-3 py-2 text-muted-foreground text-xs">
             <span>
               {t('notes.search.found_results', {
                 count: searchStats.total,

@@ -40,12 +40,12 @@ export const ProviderCard: FC<ProviderCardProps> = ({
 
   return (
     <div
-      className={`group relative rounded-xl border p-3.5 transition-colors ${
+      className={`group relative rounded-xl border bg-card p-3.5 transition-colors [border-radius:var(--radius-md)] ${
         dragging
           ? 'border-primary/40 opacity-50'
           : isCurrent
             ? 'border-primary bg-primary/5'
-            : 'border-border-subtle hover:border-border hover:bg-primary/5'
+            : 'border-border-subtle hover:border-border-strong hover:bg-accent'
       }`}>
       <div className="pointer-events-none relative flex items-center gap-3">
         <GripVertical

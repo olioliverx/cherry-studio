@@ -854,7 +854,7 @@ function FilesPage() {
   }, [embeddedPreview, files, selectedIds, handleDelete, renamingId, startInlineRename])
 
   return (
-    <div className="relative flex min-h-0 flex-1 overflow-hidden">
+    <div className="relative flex min-h-0 flex-1 overflow-hidden bg-background">
       <div className={`flex min-h-0 min-w-0 flex-1 overflow-hidden ${embeddedPreview ? 'invisible' : ''}`}>
         <FileSidebar
           filter={filter}
@@ -891,7 +891,7 @@ function FilesPage() {
         </Dialog>
 
         <div
-          className={`relative flex min-w-0 flex-1 flex-col transition-colors ${dragOver ? 'bg-accent/25' : ''}`}
+          className={`relative flex min-w-0 flex-1 flex-col bg-background transition-colors ${dragOver ? 'bg-accent/25' : ''}`}
           onDragOver={(e) => {
             e.preventDefault()
             if (isTrash) {
@@ -912,7 +912,7 @@ function FilesPage() {
           }}>
           <PageHeader
             title={activeFilterLabel}
-            className="relative mb-0 h-9 pb-1 after:pointer-events-none after:absolute after:right-3 after:bottom-0 after:left-3 after:border-border after:border-b after:content-['']"
+            className="relative mb-0 h-10 pb-1 after:pointer-events-none after:absolute after:right-4 after:bottom-0 after:left-4 after:border-border-subtle after:border-b after:content-['']"
             action={
               <div className="flex shrink-0 items-center gap-2">
                 {!isImageGrid && selectedIds.size > 0 && (

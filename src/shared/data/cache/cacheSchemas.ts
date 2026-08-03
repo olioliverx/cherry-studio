@@ -378,7 +378,7 @@ export const DefaultRendererPersistCache: RendererPersistCacheSchema = {
   'ui.tab.active_tab_id': '',
   'ui.global_search.recent_items': [],
   'ui.sidebar.docked_tabs': [],
-  'ui.sidebar.width': 50, // keep in sync with SIDEBAR_ICON_WIDTH (renderer Sidebar/constants.ts)
+  'ui.sidebar.width': 0, // ChatWise: hidden by default — open from the bottom-left launcher
   'ui.chat.sidebar.width': 275,
   'ui.chat.artifact_pane.width': 460,
   'ui.composer.input_history': [],

@@ -4,6 +4,7 @@ import type { OpenTabOptions, Tab } from '@renderer/hooks/tab'
 import useMacTransparentWindow from '@renderer/hooks/useMacTransparentWindow'
 import { isMac } from '@renderer/utils/platform'
 import { cn } from '@renderer/utils/style'
+import { getTabCapabilities, type TabCapabilities } from '@renderer/utils/tabCapabilities'
 import { Plus, X } from 'lucide-react'
 import {
   cloneElement,
@@ -301,64 +302,6 @@ const NormalTabButton = ({
 
 // ─── Tab right-click menu ─────────────────────────────────────────────────────
 
-// ─── Tab capabilities (declarative rule table) ────────────────────────────────
-
-interface TabCapabilities {
-  /** Show a right-click context menu at all. */
-  menu: boolean
-  /** "Move to first" + drag-to-reorder, within the tab's own zone. */
-  reorder: boolean
-  /** Pin (normal) or unpin (pinned). */
-  togglePin: boolean
-  /** "Open in new window" (detach to its own window). */
-  detach: boolean
-  /** Close the tab (context-menu item + inline X). */
-  close: boolean
-  /** "Close other tabs" — every other normal tab; pinned tabs are exempt. */
-  closeOthers: boolean
-  /** "Close tabs to the right" — normal tabs after this one in the strip. */
-  closeToRight: boolean
-}
-
-/**
- * Single source of truth for what a tab can do, derived from its zone and the
- * tab counts. Normal tabs can always be closed/pinned/detached; if the last tab
- * closes, TabsProvider opens Launchpad as the empty-state fallback. Pinned tabs
- * can be closed via the context menu (no inline X), and the batch close actions
- * only ever clear the normal zone — pinned tabs are exempt as close *targets*,
- * matching browser convention. Reordering is per-zone. `normalIndex` is the
- * tab's position within the normal zone — required to offer "close tabs to the
- * right"; for a pinned tab every normal tab counts as being to its right.
- */
-export function getTabCapabilities(
-  tab: Pick<Tab, 'id' | 'isPinned'>,
-  ctx: { pinnedCount: number; normalCount: number; canDetach: boolean; normalIndex?: number }
-): TabCapabilities {
-  const detach = ctx.canDetach
-  if (tab.isPinned) {
-    const hasSiblings = ctx.pinnedCount > 1
-    return {
-      menu: true,
-      reorder: hasSiblings,
-      togglePin: true,
-      detach,
-      close: true,
-      closeOthers: ctx.normalCount > 0,
-      closeToRight: ctx.normalCount > 0
-    }
-  }
-  const hasSiblings = ctx.normalCount > 1
-  return {
-    menu: true,
-    reorder: hasSiblings,
-    togglePin: true,
-    detach,
-    close: true,
-    closeOthers: hasSiblings,
-    closeToRight: ctx.normalIndex !== undefined && ctx.normalIndex < ctx.normalCount - 1
-  }
-}
-
 const TabRightClickMenu = ({
   isPinned,
   capabilities,
@@ -499,9 +442,9 @@ export const AppShellTabBar = ({
             closingClass: 'bg-accent text-accent-foreground'
           }
         : {
-            activeClass: 'bg-black/8 text-sidebar-foreground dark:bg-sidebar-accent dark:text-sidebar-foreground',
+            activeClass: 'bg-background text-foreground dark:bg-background dark:text-foreground',
             hoverClass:
-              'text-muted-foreground hover:bg-white hover:text-sidebar-foreground dark:hover:bg-white/10 dark:hover:text-sidebar-foreground data-[menu-open=true]:bg-white data-[menu-open=true]:text-sidebar-foreground dark:data-[menu-open=true]:bg-white/10 dark:data-[menu-open=true]:text-sidebar-foreground',
+              'text-muted-foreground hover:bg-black/4 hover:text-foreground dark:hover:bg-white/5 dark:hover:text-foreground data-[menu-open=true]:bg-black/4 data-[menu-open=true]:text-foreground dark:data-[menu-open=true]:bg-white/5 dark:data-[menu-open=true]:text-foreground',
             closingClass: 'bg-popover text-popover-foreground dark:bg-accent dark:text-accent-foreground'
           },
     [isMacTransparentWindow]
@@ -762,8 +705,8 @@ export const AppShellTabBar = ({
         ref={tabBarRef}
         data-ui="app.tab-bar"
         className={cn(
-          'relative flex h-11 w-full select-none items-center gap-1 [-webkit-app-region:drag]',
-          isMacTransparentWindow ? 'bg-transparent' : 'bg-sidebar',
+          'relative flex h-9 w-full select-none items-center gap-1 [-webkit-app-region:drag]',
+          isMacTransparentWindow ? 'bg-transparent' : 'bg-background',
           rightPaddingClass,
           'pl-0'
         )}>

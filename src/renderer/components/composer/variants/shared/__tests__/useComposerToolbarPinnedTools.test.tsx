@@ -38,7 +38,6 @@ describe('useComposerToolbarPinnedTools', () => {
 
   it('resets to the preference default and reports whether the list is already default', () => {
     const setPreference = vi.fn().mockResolvedValue(undefined)
-    // getDefaultValue includes the persistent new-conversation action first.
     MockUsePreferenceUtils.mockPreferenceReturn('chat.input.toolbar.pinned_tools', [], setPreference)
 
     const { result } = renderHook(() => useComposerToolbarPinnedTools('chat.input.toolbar.pinned_tools'))
@@ -48,14 +47,11 @@ describe('useComposerToolbarPinnedTools', () => {
     act(() => {
       result.current.resetPinnedIds()
     })
-    expect(setPreference).toHaveBeenCalledWith(['composer:new-conversation', 'web-search'])
+    expect(setPreference).toHaveBeenCalledWith(['attachment'])
   })
 
   it('reports isDefault when the pinned list equals the default', () => {
-    MockUsePreferenceUtils.mockPreferenceReturn('chat.input.toolbar.pinned_tools', [
-      'composer:new-conversation',
-      'web-search'
-    ])
+    MockUsePreferenceUtils.mockPreferenceReturn('chat.input.toolbar.pinned_tools', ['attachment'])
 
     const { result } = renderHook(() => useComposerToolbarPinnedTools('chat.input.toolbar.pinned_tools'))
 

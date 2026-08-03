@@ -1,0 +1,105 @@
+#!/usr/bin/env bash
+# Orb setup for Cherry Studio — runs once per fresh orb (and after snapshot restore).
+# Installs the pinned Node/pnpm toolchain, project dependencies, and rebuilds the
+# native better-sqlite3 module so `pnpm test` / `pnpm lint` / `pnpm typecheck` work.
+set -euo pipefail
+
+# Pin versions from the repo (.node-version + package.json `packageManager`).
+NODE_VERSION="$(cat .node-version)"
+PNPM_VERSION="11.8.0"
+NODE_INSTALL_DIR="$HOME/.local/opt/node-v${NODE_VERSION}"
+NODE_SYMLINK="$HOME/.local/node"
+NODE_BASE_URL="https://nodejs.org/dist/v${NODE_VERSION}/node-v${NODE_VERSION}-linux-x64.tar.xz"
+
+echo "==> [setup] Cherry Studio orb setup (Node ${NODE_VERSION}, pnpm ${PNPM_VERSION})"
+
+# ── 0. System packages for native module builds (idempotent) ───────────
+# selection-hook compiles from source on Linux and needs XTest headers;
+# build-essential/python3 are usually preinstalled but listed for safety.
+echo "==> [setup] Ensuring native build dependencies..."
+NEEDED_PKGS=()
+for pkg in build-essential python3 libxtst-dev libx11-dev libevdev-dev libwayland-dev; do
+  dpkg -s "$pkg" >/dev/null 2>&1 || NEEDED_PKGS+=("$pkg")
+done
+if ((${#NEEDED_PKGS[@]})); then
+  sudo apt-get update -qq
+  sudo apt-get install -y "${NEEDED_PKGS[@]}"
+else
+  echo "==> [setup] All native build deps already installed"
+fi
+
+# ── 1. Install pinned Node (idempotent) ───────────────────────────────
+if [[ -x "$NODE_INSTALL_DIR/bin/node" ]] && "$NODE_INSTALL_DIR/bin/node" -v >/dev/null 2>&1; then
+  echo "==> [setup] Node ${NODE_VERSION} already installed at ${NODE_INSTALL_DIR}"
+else
+  echo "==> [setup] Installing Node ${NODE_VERSION}..."
+  mkdir -p "$HOME/.local/opt"
+  curl -fsSL "$NODE_BASE_URL" -o /tmp/node.tar.xz
+  tar -xJf /tmp/node.tar.xz -C "$HOME/.local/opt"
+  rm -f /tmp/node.tar.xz
+  # The tarball extracts to node-v<ver>-linux-x64; normalize to the versioned dir.
+  rm -rf "$NODE_INSTALL_DIR"
+  mv "$HOME/.local/opt/node-v${NODE_VERSION}-linux-x64" "$NODE_INSTALL_DIR"
+fi
+ln -sfn "$NODE_INSTALL_DIR" "$NODE_SYMLINK"
+
+# Make the pinned Node available to non-interactive login shells (and supervised
+# orb services, which start in their own login shell). Idempotent, guarded by marker.
+PROFILE="$HOME/.bash_profile"
+PROFILE_MARKER="# cherry-studio orb node toolchain"
+if ! grep -Fqx "$PROFILE_MARKER" "$PROFILE" 2>/dev/null; then
+  cat >> "$PROFILE" <<EOF
+
+$PROFILE_MARKER
+export PATH="$NODE_SYMLINK/bin:$HOME/.local/bin:\$PATH"
+EOF
+  echo "==> [setup] Added Node toolchain to ${PROFILE}"
+fi
+
+# Source it into this running process so the rest of setup uses Node 24.
+# shellcheck disable=SC1091
+source "$PROFILE"
+
+echo "==> [setup] node $(node -v)  pnpm $(pnpm -v 2>/dev/null || echo 'pending')"
+
+# ── 2. Enable pnpm via corepack (idempotent) ──────────────────────────
+echo "==> [setup] Enabling pnpm ${PNPM_VERSION} via corepack..."
+corepack enable
+corepack prepare "pnpm@${PNPM_VERSION}" --activate
+echo "==> [setup] pnpm $(pnpm -v)"
+
+# ── 3. Install dependencies ───────────────────────────────────────────
+# The repo's `prepare` script runs `prek install`, which refuses when
+# `core.hooksPath` is set (the orb sets it globally for Amp's git hooks).
+# Temporarily clear the global hooksPath for the install only, and restore it
+# afterwards (via trap, so it survives an interrupted install). prek then
+# installs into .git/hooks harmlessly; Amp's global hooksPath is restored and
+# stays authoritative for real git operations.
+echo "==> [setup] Installing dependencies (pnpm install --frozen-lockfile)..."
+_saved_hooks_path="$(git config --global --get core.hooksPath || true)"
+git config --global --unset-all core.hooksPath 2>/dev/null || true
+_restore_hooks() {
+  if [ -n "$_saved_hooks_path" ]; then
+    git config --global core.hooksPath "$_saved_hooks_path"
+  else
+    git config --global --unset-all core.hooksPath 2>/dev/null || true
+  fi
+}
+trap _restore_hooks EXIT
+pnpm install --frozen-lockfile
+trap - EXIT
+_restore_hooks
+
+# ── 4. Rebuild better-sqlite3 for the host Node (tests run under Node) ─
+echo "==> [setup] Rebuilding better-sqlite3 for host Node..."
+pnpm rebuild better-sqlite3
+
+# ── 5. Local env file (gitignored; needed by dotenv-driven scripts) ────
+if [[ ! -f .env ]]; then
+  cp -- .env.example .env
+  echo "==> [setup] Copied .env.example -> .env"
+else
+  echo "==> [setup] .env already present, leaving it untouched"
+fi
+
+echo "==> [setup] Done. Verify with: node -v && pnpm -v && pnpm test:main"

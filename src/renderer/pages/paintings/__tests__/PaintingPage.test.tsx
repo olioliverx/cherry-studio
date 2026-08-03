@@ -4,6 +4,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type { PaintingData } from '../model/types/paintingData'
 
 const mocks = vi.hoisted(() => ({
+  add: vi.fn(),
   cancel: vi.fn(),
   files: [] as { id: string }[],
   generate: vi.fn(),
@@ -11,7 +12,9 @@ const mocks = vi.hoisted(() => ({
   historyItems: [] as PaintingData[],
   historyIsLoading: false,
   persistedAt: undefined as string | undefined,
+  remove: vi.fn(),
   saveCurrent: vi.fn(),
+  select: vi.fn(),
   submitting: false,
   templates: [] as { id: string; imageUrl: string; label: string; prompt: string }[]
 }))
@@ -82,7 +85,26 @@ vi.mock('../components/PaintingComposer', () => ({
 }))
 
 vi.mock('../components/PaintingStrip', () => ({
-  default: () => <div data-testid="painting-strip" />
+  default: ({
+    items,
+    onAddPainting,
+    onDeletePainting
+  }: {
+    items: PaintingData[]
+    onAddPainting: () => void
+    onDeletePainting: (painting: PaintingData) => void
+  }) => (
+    <div data-ui="paintings.painting-strip" data-testid="painting-strip" data-item-count={items.length}>
+      <button type="button" aria-label="paintings.button.new.image" onClick={onAddPainting}>
+        new
+      </button>
+      {items.map((item) => (
+        <button key={item.id} type="button" aria-label={`delete-${item.id}`} onClick={() => onDeletePainting(item)}>
+          {item.id}
+        </button>
+      ))}
+    </div>
+  )
 }))
 
 vi.mock('../hooks/usePaintingGenerationSubmit', () => ({
@@ -113,10 +135,10 @@ vi.mock('../hooks/usePaintingInitialDraft', () => ({
 
 vi.mock('../hooks/usePaintingList', () => ({
   usePaintingList: () => ({
-    add: vi.fn(),
-    remove: vi.fn(),
+    add: mocks.add,
+    remove: mocks.remove,
     saveCurrent: mocks.saveCurrent,
-    select: vi.fn()
+    select: mocks.select
   })
 }))
 
@@ -160,6 +182,7 @@ const { default: PaintingPage } = await import('../PaintingPage')
 
 describe('PaintingPage showcase', () => {
   beforeEach(() => {
+    mocks.add.mockReset()
     mocks.cancel.mockReset()
     mocks.files = []
     mocks.generate.mockReset()
@@ -167,7 +190,9 @@ describe('PaintingPage showcase', () => {
     mocks.historyItems = []
     mocks.historyIsLoading = false
     mocks.persistedAt = undefined
+    mocks.remove.mockReset()
     mocks.saveCurrent.mockReset()
+    mocks.select.mockReset()
     mocks.submitting = false
     mocks.templates = Array.from({ length: 25 }, (_, index) => ({
       id: index === 0 ? 'human-fragments-motion' : `template-${index}`,
@@ -236,6 +261,96 @@ describe('PaintingPage showcase', () => {
 
     expect(screen.getByTestId('painting-template-showcase')).toBeInTheDocument()
     expect(screen.queryByTestId('painting-artboard')).not.toBeInTheDocument()
+  })
+
+  it('does not mount the history strip when hydrated history is empty', () => {
+    mocks.historyItems = []
+    mocks.historyIsLoading = false
+
+    render(<PaintingPage />)
+
+    expect(screen.queryByTestId('painting-strip')).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'paintings.button.new.image' })).not.toBeInTheDocument()
+    // Empty route remains a full-width creation canvas (showcase + composer).
+    expect(screen.getByTestId('painting-template-showcase')).toBeInTheDocument()
+    expect(screen.getByTestId('painting-composer')).toBeInTheDocument()
+  })
+
+  it('does not mount the history strip while history is still loading with no items', () => {
+    // Authoritative loading keeps items=[] until hydration; must not flash an empty rail.
+    mocks.historyItems = []
+    mocks.historyIsLoading = true
+
+    render(<PaintingPage />)
+
+    expect(screen.queryByTestId('painting-strip')).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'paintings.button.new.image' })).not.toBeInTheDocument()
+    expect(screen.getByTestId('painting-template-showcase')).toBeInTheDocument()
+  })
+
+  it('mounts the 68px history strip with New Image when history has items', () => {
+    mocks.historyItems = [
+      {
+        id: 'persisted-painting',
+        providerId: 'provider-1',
+        mode: 'generate',
+        prompt: 'persisted prompt',
+        files: [{ id: 'file-1' } as PaintingData['files'][number]],
+        persistedAt: '2026-01-01T00:00:00.000Z'
+      }
+    ]
+
+    render(<PaintingPage />)
+
+    const strip = screen.getByTestId('painting-strip')
+    expect(strip).toHaveAttribute('data-ui', 'paintings.painting-strip')
+    expect(strip).toHaveAttribute('data-item-count', '1')
+    expect(screen.getByRole('button', { name: 'paintings.button.new.image' })).toBeInTheDocument()
+  })
+
+  it('mounts the strip when history transitions from empty to the first item', () => {
+    mocks.historyItems = []
+    const { rerender } = render(<PaintingPage />)
+    expect(screen.queryByTestId('painting-strip')).not.toBeInTheDocument()
+
+    mocks.historyItems = [
+      {
+        id: 'first-painting',
+        providerId: 'provider-1',
+        mode: 'generate',
+        prompt: 'first',
+        files: [],
+        persistedAt: '2026-01-01T00:00:00.000Z'
+      }
+    ]
+    rerender(<PaintingPage />)
+
+    expect(screen.getByTestId('painting-strip')).toHaveAttribute('data-item-count', '1')
+    expect(screen.getByRole('button', { name: 'paintings.button.new.image' })).toBeInTheDocument()
+    // Composer remains available across the transition.
+    expect(screen.getByTestId('painting-composer')).toBeInTheDocument()
+  })
+
+  it('unmounts the strip when the last history item is removed', () => {
+    mocks.historyItems = [
+      {
+        id: 'only-painting',
+        providerId: 'provider-1',
+        mode: 'generate',
+        prompt: 'only',
+        files: [],
+        persistedAt: '2026-01-01T00:00:00.000Z'
+      }
+    ]
+    const { rerender } = render(<PaintingPage />)
+    expect(screen.getByTestId('painting-strip')).toBeInTheDocument()
+
+    mocks.historyItems = []
+    rerender(<PaintingPage />)
+
+    expect(screen.queryByTestId('painting-strip')).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'paintings.button.new.image' })).not.toBeInTheDocument()
+    expect(screen.getByTestId('painting-composer')).toBeInTheDocument()
   })
 
   it('hides the showcase and disables send while submit validation is pending', () => {

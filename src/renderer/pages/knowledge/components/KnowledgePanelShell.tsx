@@ -9,8 +9,8 @@ interface KnowledgePanelShellProps {
 
 const KnowledgePanelShell = ({ children, header, headerClassName, className }: KnowledgePanelShellProps) => {
   return (
-    <section className={`flex h-full min-h-0 flex-1 flex-col ${className ?? ''}`}>
-      {header ? <div className={headerClassName ?? 'shrink-0 px-3 pt-3 pb-2'}>{header}</div> : null}
+    <section className={`flex h-full min-h-0 flex-1 flex-col bg-background ${className ?? ''}`}>
+      {header ? <div className={headerClassName ?? 'shrink-0 px-4 pt-3 pb-2'}>{header}</div> : null}
       {children}
     </section>
   )
