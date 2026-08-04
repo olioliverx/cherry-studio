@@ -80,7 +80,10 @@ export function Sidebar({
     return (
       <div
         data-testid="floating-sidebar"
-        className="sidebar-theme flex h-full w-43.5 select-none flex-col bg-sidebar [-webkit-app-region:drag]">
+        className={cn(
+          'sidebar-theme flex h-full w-43.5 select-none flex-col [-webkit-app-region:drag]',
+          isMacTransparentWindow ? 'bg-transparent backdrop-blur-xl backdrop-saturate-150' : 'bg-sidebar'
+        )}>
         <div className="flex h-14 shrink-0 items-center gap-2.5 px-4 [-webkit-app-region:drag]">
           {renderLogo()}
           <span className="truncate text-sidebar-foreground text-sm">{title}</span>

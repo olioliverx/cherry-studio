@@ -75,7 +75,11 @@ export function ChatConversationControls({
   const triggerClassName = side === 'bottom' ? COMPOSER_BELOW_SELECTOR_BUTTON_CLASS : COMPOSER_SELECTOR_BUTTON_CLASS
   const compactTriggerClassName = cn(triggerClassName, iconOnly && COMPOSER_ICON_ONLY_SELECTOR_BUTTON_CLASS)
   const labelClassName = cn('truncate', iconOnly && COMPOSER_ICON_ONLY_LABEL_CLASS)
-  const modelTriggerClassName = cn(triggerClassName, iconOnly && model && COMPOSER_ICON_ONLY_SELECTOR_BUTTON_CLASS)
+  const modelTriggerClassName = cn(
+    triggerClassName,
+    'text-sm',
+    iconOnly && model && COMPOSER_ICON_ONLY_SELECTOR_BUTTON_CLASS
+  )
   const modelLabelClassName = cn('truncate', iconOnly && model && COMPOSER_ICON_ONLY_LABEL_CLASS)
   const isMentionedModelSelectorLocked = lockedMentionedModels.length > 1
   const selectedMentionedModels = isMentionedModelSelectorLocked
@@ -85,6 +89,7 @@ export function ChatConversationControls({
       : mentionedModels
   const mentionedModelTriggerClassName = cn(
     triggerClassName,
+    'text-sm',
     iconOnly && selectedMentionedModels.length > 0 && COMPOSER_ICON_ONLY_SELECTOR_BUTTON_CLASS
   )
   const modelLabel = model ? model.name : selectModelLabel
