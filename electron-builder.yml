@@ -152,6 +152,7 @@ electronDownload:
 beforePack: scripts/before-pack.js
 afterPack: scripts/after-pack.js
 afterSign: scripts/notarize.js
+afterAllArtifactBuild: scripts/notarize-dmg.js
 artifactBuildCompleted: scripts/artifact-build-completed.js
 releaseInfo:
   releaseNotes: |
