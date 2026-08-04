@@ -83,7 +83,7 @@ const BaseNavigator = ({
   return (
     <div style={{ width }} className="relative h-full min-h-0 shrink-0">
       {/* Keep the padding-free rows aligned within the compact sidebar inset. */}
-      <aside className="flex size-full min-h-0 flex-col border-border-subtle border-r bg-sidebar p-2 text-sidebar-foreground">
+      <aside className="flex size-full min-h-0 flex-col bg-background p-2 text-sidebar-foreground">
         <div className="flex shrink-0 flex-col gap-2.5">
           {/* Same borderless header item the assistant and agent rails use, so the three
               sidebars read as one family. */}

@@ -63,7 +63,7 @@ export function FileSidebar({
   }
 
   return (
-    <aside className="flex w-(--settings-width) min-w-(--settings-width) shrink-0 select-none flex-col border-border-subtle border-r bg-sidebar text-sidebar-foreground">
+    <aside className="flex w-(--settings-width) min-w-(--settings-width) shrink-0 select-none flex-col bg-background text-sidebar-foreground">
       <PageHeader title={t('files.title')} />
       <Scrollbar className="min-h-0 flex-1">
         <MenuList className="shell-launcher-clearance gap-1 px-2.5">

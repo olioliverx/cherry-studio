@@ -323,7 +323,7 @@ const NotesSidebar: FC<NotesSidebarProps> = ({
 
   return (
     <div
-      className="relative isolate flex h-full min-h-0 w-62.5 min-w-62.5 flex-col border-border-subtle border-r bg-sidebar"
+      className="relative isolate flex h-full min-h-0 w-62.5 min-w-62.5 flex-col bg-background"
       onDragOver={(e) => {
         e.preventDefault()
         setIsDragOverSidebar(true)
