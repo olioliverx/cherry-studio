@@ -563,8 +563,10 @@ describe('Sidebar resize handle', () => {
 
     const panel = screen.getByTestId('floating-sidebar')
 
-    expect(panel).toHaveClass('bg-sidebar', 'w-43.5')
-    expect(panel).not.toHaveClass('bg-sidebar/70')
+    expect(panel).toHaveClass('bg-background', 'w-43.5')
+    expect(panel).not.toHaveClass('bg-background/70')
+    // The shell is one continuous surface: the panel must not fall back to vibrancy.
+    expect(panel).not.toHaveClass('bg-transparent')
     // Panel-only: no full-viewport transparent overlay wrapper.
     expect(panel.parentElement?.className ?? '').not.toContain('fixed inset-0')
   })

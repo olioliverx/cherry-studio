@@ -1,6 +1,5 @@
 import './Sidebar.css'
 
-import useMacTransparentWindow from '@renderer/hooks/useMacTransparentWindow'
 import { cn } from '@renderer/utils/style'
 import { Search } from 'lucide-react'
 import React from 'react'
@@ -50,7 +49,6 @@ export function Sidebar({
   onEntriesReorder,
   onEntryOpen
 }: SidebarProps) {
-  const isMacTransparentWindow = useMacTransparentWindow()
   const { sidebarRef, startResizing } = useSidebarResize(width, setWidth, onResizePreview)
   const layout = getSidebarLayout(width)
   const showFooter = Boolean(extensionsLabel || user || onExtensionsClick || actions)
@@ -82,7 +80,7 @@ export function Sidebar({
         data-testid="floating-sidebar"
         className={cn(
           'sidebar-theme flex h-full w-43.5 select-none flex-col [-webkit-app-region:drag]',
-          isMacTransparentWindow ? 'bg-transparent backdrop-blur-xl backdrop-saturate-150' : 'bg-sidebar'
+          'bg-background'
         )}>
         <div className="flex h-14 shrink-0 items-center gap-2.5 px-4 [-webkit-app-region:drag]">
           {renderLogo()}
@@ -140,7 +138,7 @@ export function Sidebar({
       style={{ width: actualWidth }}
       className={cn(
         'sidebar-theme group/sidebar relative z-20 flex h-full shrink-0 select-none flex-col [-webkit-app-region:drag]',
-        isMacTransparentWindow ? 'bg-transparent backdrop-blur-xl backdrop-saturate-150' : 'bg-sidebar'
+        'bg-background'
       )}>
       {/* Header */}
       <div

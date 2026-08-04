@@ -9,7 +9,7 @@ export function ConversationNavigationPane({ children, className, ...props }: HT
   return (
     <div
       className={cn(
-        'conversation-navigation-pane relative flex w-[var(--assistants-width)] flex-col overflow-hidden border-sidebar-border border-r bg-background transition-[width] duration-300',
+        'conversation-navigation-pane relative flex w-[var(--assistants-width)] flex-col overflow-hidden bg-background transition-[width] duration-300',
         isWindowFrame ? 'h-full' : 'h-[calc(100vh_-_var(--navbar-height))]',
         className
       )}

@@ -1,6 +1,5 @@
 import { useCommandHandler } from '@renderer/hooks/command'
 import { useMainWindowNavigation, useTabs } from '@renderer/hooks/tab'
-import useMacTransparentWindow from '@renderer/hooks/useMacTransparentWindow'
 import { ipcApi, useIpcOn } from '@renderer/ipc'
 import { isMac } from '@renderer/utils/platform'
 import { getDefaultRouteTitle, isPageTitledRoute } from '@renderer/utils/routeTitle'
@@ -18,7 +17,6 @@ import { TabRouter } from './TabRouter'
 
 /** ChatWise-style shell: no icon rail, no tab bar — all routes. */
 export const AppShell = () => {
-  const isMacTransparentWindow = useMacTransparentWindow()
   const { tabs, activeTabId, updateTab } = useTabs()
   const activeTab = useMemo(() => tabs.find((tab) => tab.id === activeTabId), [activeTabId, tabs])
   const [isFullscreen, setIsFullscreen] = useState(false)
@@ -197,10 +195,7 @@ export const AppShell = () => {
         data-shell-variant="chatwise"
         data-shell-local-top-inset="none"
         style={shellGeometryStyle}
-        className={cn(
-          'flex h-screen w-screen flex-row overflow-hidden text-foreground',
-          isMacTransparentWindow ? 'bg-transparent' : 'bg-sidebar'
-        )}>
+        className={cn('flex h-screen w-screen flex-row overflow-hidden text-foreground', 'bg-background')}>
         {sidebar}
         {contentColumn}
       </div>
@@ -212,10 +207,7 @@ export const AppShell = () => {
       data-shell-variant="chatwise"
       data-shell-local-top-inset="none"
       style={shellGeometryStyle}
-      className={cn(
-        'relative flex h-screen w-screen flex-row overflow-hidden text-foreground',
-        isMacTransparentWindow ? 'bg-transparent' : 'bg-sidebar'
-      )}>
+      className={cn('relative flex h-screen w-screen flex-row overflow-hidden text-foreground', 'bg-background')}>
       {!isFullscreen && (
         <div
           aria-hidden="true"
